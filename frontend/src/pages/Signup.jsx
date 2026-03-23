@@ -18,7 +18,11 @@ export default function Signup() {
       localStorage.setItem('user', JSON.stringify(res.data.user));
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || 'Error creating account');
+      if (!err.response) {
+        setError('Network Error: Could not reach the backend API. Please check your Vercel URL configurations.');
+      } else {
+        setError(err.response?.data?.message || 'Error creating account');
+      }
     }
   };
 

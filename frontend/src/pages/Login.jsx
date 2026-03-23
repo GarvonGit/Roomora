@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../utils/api';
 import { BedDouble, Lock, User } from 'lucide-react';
 
 export default function Login() {
@@ -12,12 +12,16 @@ export default function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:5001/api/auth/login', { username, password });
+      const res = await api.post('/auth/login', { username, password });
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || 'Invalid credentials');
+      if (!err.response) {
+        setError('Network Connection Error: The frontend could not reach the backend API. If on Vercel, ensure your Vercel URL mappings routing /api points correctly or you have deployed the backend!');
+      } else {
+        setError(err.response?.data?.message || 'Invalid credentials');
+      }
     }
   };
 
