@@ -18,9 +18,7 @@ export default function Login() {
       navigate('/dashboard');
     } catch (err) {
       if (!err.response) {
-        setError('Network Connection Error: Could not reach the API. Ensure your backend is running.');
-      } else if (err.response.status === 404) {
-        setError('Vercel Config Error: 404 - The backend /api is not found! Check your Vercel Root Directory settings (it should be empty/root, not frontend/)');
+        setError('Network Connection Error: Could not reach the Render API. It may be asleep (spins up in ~50s) or offline.');
       } else {
         setError(err.response?.data?.message || `Server Error ${err.response.status}`);
       }

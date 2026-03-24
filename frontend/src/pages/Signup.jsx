@@ -19,9 +19,7 @@ export default function Signup() {
       navigate('/dashboard');
     } catch (err) {
       if (!err.response) {
-        setError('Network Error: Could not reach the backend API. Please check your configurations.');
-      } else if (err.response.status === 404) {
-        setError('Vercel Config Error: 404 - The backend API is not found! Change your Vercel Root Directory to ./ instead of frontend/.');
+        setError('Network Connection Error: Could not reach the Render API. It may be asleep (spins up in ~50s) or offline.');
       } else {
         setError(err.response?.data?.message || `Error creating account (Status: ${err.response.status})`);
       }

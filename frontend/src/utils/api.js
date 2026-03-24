@@ -1,7 +1,9 @@
 import axios from 'axios';
 
+const IS_DEV = window.location.hostname === 'localhost';
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:5001/api' : '/api')
+  baseURL: import.meta.env.VITE_API_URL || (IS_DEV ? 'http://localhost:5001/api' : 'https://roomora-tb9l.onrender.com/api')
 });
 
 api.interceptors.request.use(
