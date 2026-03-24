@@ -127,14 +127,6 @@ app.post('/api/auth/login', async (req, res) => {
     try {
         const userRes = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
         if (userRes.rows.length === 0) {
-            // Check for strict local mock sandbox fallback if db is empty
-            if (username === 'admin' && password === 'password') {
-                const countRes = await pool.query('SELECT count(*) FROM users');
-                if (parseInt(countRes.rows[0].count) === 0) {
-                    const token = jwt.sign({ id: 0, username: 'admin', email: 'admin@roomora.com', hotelName: 'Grand Plaza Hotel' }, JWT_SECRET, { expiresIn: '30d' });
-                    return res.json({ token, user: { id: 0, username: 'admin', email: 'admin@roomora.com', hotelName: 'Grand Plaza Hotel', role: 'Admin', plan_name: 'Pro', plan_expiry: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString() } });
-                }
-            }
             return res.status(401).json({ message: 'Invalid credentials' });
         }
 
@@ -387,7 +379,7 @@ app.post('/api/payments/verify', authenticateToken, async (req, res) => {
 });
 
 const PORT = process.env.PORT || 5001;
-if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+if (!process.env.VERCEL) {
     app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 }
 module.exports = app;

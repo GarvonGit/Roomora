@@ -4,8 +4,8 @@ import api from '../utils/api';
 import { BedDouble, Lock, User } from 'lucide-react';
 
 export default function Login() {
-  const [username, setUsername] = useState('admin');
-  const [password, setPassword] = useState('password');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
@@ -67,14 +67,6 @@ export default function Login() {
         <p className="text-center text-sm text-gray-500">
           Don't have an account? <Link to="/signup" className="text-primary-600 dark:text-primary-400 hover:underline">Sign up</Link>
         </p>
-
-        <div className="mt-6 p-4 bg-primary-50 dark:bg-primary-900/20 rounded-lg text-center">
-          <p className="text-sm text-primary-700 dark:text-primary-300">
-            <strong>Test Credentials:</strong><br/>
-            Username: admin<br/>
-            Password: password
-          </p>
-        </div>
       </div>
     </div>
   );
