@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import GlobalLoader from './components/GlobalLoader';
 import DashboardLayout from './layouts/DashboardLayout';
 import Dashboard from './pages/Dashboard';
 import Inventory from './pages/Inventory';
@@ -29,6 +30,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <div className={darkMode ? 'dark' : ''}>
+        <GlobalLoader />
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
