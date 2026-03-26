@@ -16,12 +16,11 @@
       "dest": "backend/server.js"
     },
     {
-      "src": "/(.*)\\.(css|js|map|json|png|jpg|jpeg|svg|gif|ico|ttf|woff|woff2|txt|xml|webp)$",
-      "dest": "frontend/dist/$1.$2"
+      "handle": "filesystem"
     },
     {
       "src": "/(.*)",
-      "dest": "frontend/dist/index.html"
+      "dest": "/index.html"
     }
   ]
 }
