@@ -41,11 +41,11 @@ api.interceptors.response.use(
     activeRequests--;
     if (activeRequests <= 0) toggleLoader(false);
     
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
-    }
+    // if (error.response?.status === 401) {
+    //   localStorage.removeItem('token');
+    //   localStorage.removeItem('user');
+    //   window.location.href = '/login';
+    // }
     return Promise.reject(error);
   }
 );

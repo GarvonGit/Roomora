@@ -3,16 +3,61 @@ import { Shield, Key, Building, Bell, CreditCard, Save, X, Eye, EyeOff, Plug, Pl
 import api from '../utils/api';
 
 export default function Settings() {
-  const [activeTab, setActiveTab] = useState('api');
+  const [activeTab, setActiveTab] = useState('profile');
   const [integrations, setIntegrations] = useState([]);
+  
+  // Dynamic Profile State
+  const [profile, setProfile] = useState({ hotelName: '', email: '', address: '123 Verified Road (Mock DB)' });
+  const [isSaving, setIsSaving] = useState(false);
   
   // Modal State
   const [selectedOTA, setSelectedOTA] = useState(null);
   const [showKeys, setShowKeys] = useState(false);
 
+  const mockNotifications = [
+    {
+      id: 1,
+      title: 'Payment Reminder',
+      description: 'Your Roomora Pro plan will renew in 30 days. Please ensure your card on file is active.',
+      time: '2 hours ago',
+      type: 'billing',
+      read: false
+    },
+    {
+      id: 2,
+      title: 'New Booking Received',
+      description: 'Rahul Sharma booked a Deluxe Room via Booking.com checking in on Apr 1st.',
+      time: '4 hours ago',
+      type: 'booking',
+      read: false
+    },
+    {
+      id: 3,
+      title: 'New Booking Received',
+      description: 'Amit Patel booked an Executive Suite via Airbnb checking in on Apr 2nd.',
+      time: 'Yesterday',
+      type: 'booking',
+      read: true
+    },
+    {
+      id: 4,
+      title: 'Integration Alert',
+      description: 'Airbnb API keys were successfully synchronized.',
+      time: '2 days ago',
+      type: 'system',
+      read: true
+    }
+  ];
+
   useEffect(() => {
-    // Fetch mock integrations
+    // Fetch integrations
     api.get('/integrations').then(res => setIntegrations(res.data)).catch(err => console.error(err));
+    // Fetch Profile
+    api.get('/auth/me').then(res => {
+       if(res.data?.user) {
+         setProfile(prev => ({ ...prev, hotelName: res.data.user.hotelName || '', email: res.data.user.email || '' }));
+       }
+    }).catch(err => console.error(err));
   }, []);
 
   const tabs = [
@@ -62,20 +107,36 @@ export default function Settings() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Hotel Name</label>
-                  <input type="text" className="input-field" defaultValue="Grand Plaza Hotel" />
+                  <input type="text" className="input-field" value={profile.hotelName} onChange={e => setProfile({...profile, hotelName: e.target.value})} />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Contact Email</label>
-                  <input type="email" className="input-field" defaultValue="admin@grandplaza.com" />
+                  <input type="email" className="input-field" value={profile.email} onChange={e => setProfile({...profile, email: e.target.value})} />
                 </div>
                 <div className="space-y-2 md:col-span-2">
                   <label className="text-sm font-medium">Address</label>
-                  <input type="text" className="input-field" defaultValue="123 Ocean Drive, Miami FL" />
+                  <input type="text" className="input-field" value={profile.address} onChange={e => setProfile({...profile, address: e.target.value})} />
                 </div>
               </div>
               <div className="pt-4 border-t border-gray-100 dark:border-dark-700 flex justify-end">
-                <button className="btn-primary flex items-center gap-2">
-                  <Save className="w-4 h-4" /> Save Changes
+                <button 
+                  onClick={async () => {
+                     setIsSaving(true);
+                     try {
+                        await api.put('/settings/profile', { hotelName: profile.hotelName, email: profile.email });
+                        alert('Profile successfully updated!');
+                        // Refresh the UI context
+                        window.location.reload();
+                     } catch(err) {
+                        alert('Error saving profile');
+                     } finally {
+                        setIsSaving(false);
+                     }
+                  }}
+                  disabled={isSaving}
+                  className="btn-primary flex items-center gap-2 disabled:opacity-50"
+                >
+                  <Save className="w-4 h-4" /> {isSaving ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
             </div>
@@ -137,13 +198,50 @@ export default function Settings() {
               </div>
             </div>
           )}
+          {activeTab === 'notifications' && (
+            <div className="card space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <h3 className="text-lg font-semibold border-b border-gray-100 dark:border-dark-700 pb-4">Notifications</h3>
+              
+              <div className="space-y-3">
+                {mockNotifications.map(notification => (
+                  <div 
+                    key={notification.id} 
+                    className={`p-4 border rounded-xl flex items-start gap-4 transition-colors relative overflow-hidden
+                      ${notification.read 
+                        ? 'bg-white dark:bg-dark-800 border-gray-200 dark:border-dark-700' 
+                        : 'bg-primary-50 dark:bg-dark-700 border-primary-100 dark:border-dark-700 shadow-sm'}`}
+                  >
+                    {!notification.read && <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary-500"></div>}
+                    
+                    <div className={`p-2 rounded-lg 
+                      ${notification.type === 'billing' ? 'bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-400' : 
+                        notification.type === 'booking' ? 'bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400' : 
+                        'bg-green-100 text-green-600 dark:bg-green-500/20 dark:text-green-400'}`}
+                    >
+                      <Bell className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <h4 className={`text-sm font-semibold ${notification.read ? 'text-gray-700 dark:text-gray-300' : 'text-gray-900 dark:text-white'}`}>
+                          {notification.title}
+                        </h4>
+                        <span className="text-xs text-gray-500">{notification.time}</span>
+                      </div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{notification.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {activeTab === 'billing' && (
             <div className="card space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <h3 className="text-lg font-semibold border-b border-gray-100 dark:border-dark-700 pb-4">Roomora Billing & Plans</h3>
               
               <div className="p-6 border border-gray-200 dark:border-dark-700 rounded-xl bg-white dark:bg-dark-800 shadow-sm relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-4">
-                  <span className="bg-primary-100 text-primary-800 text-xs font-semibold px-2.5 py-0.5 rounded dark:bg-primary-900 dark:text-primary-300">Popular</span>
+                  <span className="bg-primary-100 text-primary-700 text-xs font-semibold px-2.5 py-0.5 rounded dark:bg-primary-700/30 dark:text-primary-100 border border-transparent dark:border-primary-700/50">Popular</span>
                 </div>
                 <h4 className="text-xl font-bold mb-2">Roomora Pro</h4>
                 <p className="text-gray-500 mb-4 text-sm">₹199 / month</p>

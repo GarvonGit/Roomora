@@ -20,13 +20,15 @@ export default function Bookings() {
   };
 
   const getStatusBadge = (status) => {
-    switch(status) {
-      case 'Confirmed':
+    switch(status?.toLowerCase()) {
+      case 'confirmed':
         return <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400 text-xs font-semibold"><CheckCircle2 className="w-3 h-3" /> Confirmed</span>;
-      case 'Pending':
+      case 'pending':
         return <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 text-xs font-semibold"><Clock className="w-3 h-3" /> Pending</span>;
-      case 'Cancelled':
+      case 'cancelled':
         return <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 text-xs font-semibold"><XCircle className="w-3 h-3" /> Cancelled</span>;
+      case 'completed':
+        return <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-semibold"><CheckCircle2 className="w-3 h-3" /> Completed</span>;
       default:
         return null;
     }

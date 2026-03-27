@@ -27,13 +27,58 @@ const navItems = [
 
 export default function DashboardLayout({ darkMode, setDarkMode }) {
   const navigate = useNavigate();
-  const [user, setUser] = useState({ username: 'Admin', role: 'Admin', hotelName: 'Grand Plaza Hotel' });
+  const [user, setUser] = useState({ username: 'Loading...', role: 'Admin', hotelName: 'Loading...' });
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  const mockNotifications = [
+    {
+      id: 1,
+      title: 'Payment Reminder',
+      description: 'Your Roomora Pro plan will renew in 30 days. Please ensure your card on file is active.',
+      time: '2 hours ago',
+      type: 'billing',
+      read: false
+    },
+    {
+      id: 2,
+      title: 'New Booking Received',
+      description: 'Rahul Sharma booked a Deluxe Room via Booking.com checking in on Apr 1st.',
+      time: '4 hours ago',
+      type: 'booking',
+      read: false
+    },
+    {
+      id: 3,
+      title: 'New Booking Received',
+      description: 'Amit Patel booked an Executive Suite via Airbnb checking in on Apr 2nd.',
+      time: 'Yesterday',
+      type: 'booking',
+      read: true
+    },
+    {
+      id: 4,
+      title: 'Integration Alert',
+      description: 'Airbnb API keys were successfully synchronized.',
+      time: '2 days ago',
+      type: 'system',
+      read: true
+    }
+  ];
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
+    
+    // Synchronize globally with the backend context
+    import('../utils/api').then(({ default: api }) => {
+      api.get('/auth/me').then(res => {
+         if(res.data?.user) {
+            setUser(prev => ({ ...prev, ...res.data.user }));
+         }
+      }).catch(console.error);
+    });
   }, []);
 
   const handleLogout = () => {
@@ -97,7 +142,7 @@ export default function DashboardLayout({ darkMode, setDarkMode }) {
 
         <div className="p-4 border-t border-gray-200 dark:border-dark-700">
           <div className="flex items-center gap-3 px-4 py-3 text-gray-600 dark:text-gray-400">
-            <div className="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center text-primary-600 dark:text-primary-400 font-bold uppercase">
+            <div className="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-700/30 border border-transparent dark:border-primary-700/50 flex items-center justify-center text-primary-600 dark:text-primary-100 font-bold uppercase">
               {user.username.charAt(0)}
             </div>
             <div className="flex-1 overflow-hidden">
@@ -122,10 +167,39 @@ export default function DashboardLayout({ darkMode, setDarkMode }) {
               {user.hotelName}
             </div>
 
-            <button className="p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-700 rounded-full transition-colors relative">
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-dark-800"></span>
-            </button>
+            <div className="relative">
+              <button 
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-700 rounded-full transition-colors relative"
+              >
+                <Bell className="w-5 h-5" />
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-dark-800"></span>
+              </button>
+              
+              {showNotifications && (
+                <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-dark-800 rounded-xl shadow-lg border border-gray-100 dark:border-dark-700 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
+                  <div className="p-4 border-b border-gray-100 dark:border-dark-700 flex justify-between items-center bg-gray-50 dark:bg-dark-800/50">
+                    <h3 className="font-semibold text-gray-900 dark:text-gray-100">Notifications</h3>
+                    <span className="text-xs bg-primary-100 text-primary-700 dark:bg-primary-700/30 dark:text-primary-100 py-0.5 px-2 rounded-full font-medium border border-transparent dark:border-primary-700/30">2 New</span>
+                  </div>
+                  <div className="max-h-96 overflow-y-auto">
+                    {mockNotifications.map(notification => (
+                      <div key={notification.id} className={`p-4 border-b border-gray-50 dark:border-dark-700/50 hover:bg-gray-50 dark:hover:bg-dark-700/50 transition-colors cursor-pointer ${notification.read ? 'opacity-70' : 'bg-primary-50/30 dark:bg-dark-700/50'}`}>
+                         <div className="flex justify-between items-start mb-1">
+                            <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{notification.title}</h4>
+                            <span className="text-xs text-gray-500 whitespace-nowrap ml-2">{notification.time}</span>
+                         </div>
+                         <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 leading-relaxed">{notification.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="p-3 border-t border-gray-100 dark:border-dark-700 text-center bg-gray-50 dark:bg-dark-800/50">
+                    <NavLink to="/settings" onClick={() => setShowNotifications(false)} className="text-xs font-semibold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300">View All in Settings</NavLink>
+                  </div>
+                </div>
+              )}
+            </div>
+            
             <button
               onClick={() => setDarkMode(!darkMode)}
               className="p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-dark-700 rounded-full transition-colors"
