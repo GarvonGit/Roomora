@@ -29,11 +29,59 @@ const transporter = nodemailer.createTransport({
     auth: { user: "mock@ethereal.email", pass: "mock123" }
 });
 
-// Configure PostgreSQL Pool connection (Vercel Postgres or Local)
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
-});
+// Configure a COMPLETE MOCK of PostgreSQL Pool to bypass paused Supabase ENOTFOUND errors
+const pool = {
+  query: async (text, params) => {
+    const q = typeof text === 'string' ? text : text.text;
+    
+    // Mock Auth / Check User
+    if (q.includes('FROM users WHERE id =') || q.includes('FROM users LIMIT 1') || q.includes('SELECT * FROM users WHERE username =')) {
+        return { rows: [{ id: 101, username: 'Test User', email: 'test@roomora.com', password_hash: '$2a$10$xyz', plan_name: 'Pro', plan_expiry: '2030-12-31T00:00:00.000Z' }] };
+    }
+    
+    // Mock Hotel Match
+    if (q.includes('FROM hotels WHERE user_id')) {
+        return { rows: [{ id: 201, hotel_name: 'The Grand Roomora (Demo)' }] };
+    }
+    
+    // Mock Dashboard Analytics: Bookings
+    if (q.includes('FROM bookings')) {
+        const today = new Date();
+        return { rows: [
+            { id: 1, guest_name: 'John Doe', room_type: 'Standard Room', check_in: '2026-04-01', check_out: '2026-04-05', platform_name: 'booking', price: 5000, status: 'confirmed', created_at: today },
+            { id: 2, guest_name: 'Jane Smith', room_type: 'Deluxe Room', check_in: '2026-04-02', check_out: '2026-04-06', platform_name: 'airbnb', price: 7500, status: 'confirmed', created_at: today }
+        ]};
+    }
+    
+    if (q.includes('count(*) FROM ota_integrations')) {
+        return { rows: [{ count: '3' }] };
+    }
+    
+    // Mock Integrations
+    if (q.includes('FROM ota_integrations')) {
+        return { rows: [
+            { id: 1, platform_name: 'booking', connected: true, apiKey: 'mock-key', secret: 'mock-secret' },
+            { id: 2, platform_name: 'airbnb', connected: true, apiKey: 'mock-key', secret: 'mock-secret' }
+        ]};
+    }
+    
+    // Mock Inventory
+    if (q.includes('FROM rooms')) {
+        return { rows: [
+            { id: 1, type: 'Standard Room', total_count: 10, available: 5, base_price: 1500 },
+            { id: 2, type: 'Deluxe Room', total_count: 5, available: 2, base_price: 2500 }
+        ]};
+    }
+
+    return { rows: [] };
+  },
+  connect: async () => {
+     return {
+         query: async () => ({ rows: [] }),
+         release: () => {}
+     };
+  }
+};
 
 // Authentication Middleware (Bypassed for Testing)
 const authenticateToken = async (req, res, next) => {

@@ -46,6 +46,22 @@ export default function Calendar() {
     setCurrentDate(new Date(year, month + 1, 1));
   };
 
+  const getAiMarkupForMonth = (y, m) => {
+    const monthEvents = [...initialIndianHolidays, ...customEvents].filter(e => {
+       const [ey, em] = e.date.split('-');
+       return parseInt(ey) === y && parseInt(em) === m + 1;
+    });
+
+    if (monthEvents.length > 0) {
+      const types = monthEvents.map(e => e.type);
+      if (types.includes('sports')) return 80;
+      if (types.includes('concert')) return 70;
+      if (types.includes('religious') || types.includes('public_holiday')) return 50;
+      return 40;
+    }
+    return 15;
+  };
+
   const handlePricingSuggest = () => {
     const thisMonthEvents = [...initialIndianHolidays, ...customEvents].filter(e => {
        const [y, m] = e.date.split('-');
@@ -55,20 +71,16 @@ export default function Calendar() {
     if (thisMonthEvents.length > 0) {
       const types = thisMonthEvents.map(e => e.type);
       let insight = '';
-      let markup = 20;
+      const markup = getAiMarkupForMonth(year, month);
 
       if (types.includes('sports')) {
          insight = 'Due to an upcoming major sports match in your city this month, out-of-town fans will create a massive demand surge!';
-         markup = 80;
       } else if (types.includes('concert')) {
          insight = 'A scheduled concert this month will draw heavy tourism. Bookings usually spike 2 weeks prior.';
-         markup = 70;
       } else if (types.includes('religious') || types.includes('public_holiday')) {
          insight = 'Upcoming religious or public holidays detected. Families will be traveling locally.';
-         markup = 50;
       } else {
          insight = 'Custom events detected in your area.';
-         markup = 40;
       }
 
       alert(`🤖 AI Pricing Insight for ${currentDate.toLocaleString('default', { month: 'long' })}:\n\n${insight}\n\nRecommendation: Increase base room rates by up to ${markup}% on and immediately surrounding these dates to maximize revenue.`);
@@ -216,7 +228,7 @@ export default function Calendar() {
               <TrendingUp className="w-3 h-3" /> High Demand!
             </div>
             <button className="w-full bg-primary-600 hover:bg-primary-700 text-white text-[10px] font-medium py-1.5 rounded transition-colors shadow-sm">
-              Increase +15%
+              Increase +{getAiMarkupForMonth(renderY, renderM)}%
             </button>
           </div>
         )}
