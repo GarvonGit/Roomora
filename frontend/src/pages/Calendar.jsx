@@ -22,7 +22,7 @@ export default function Calendar() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newEventDate, setNewEventDate] = useState('');
   const [newEventName, setNewEventName] = useState('');
-  const [newEventType, setNewEventType] = useState('other');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -46,62 +46,45 @@ export default function Calendar() {
     setCurrentDate(new Date(year, month + 1, 1));
   };
 
-  const getAiMarkupForMonth = (y, m) => {
-    const monthEvents = [...initialIndianHolidays, ...customEvents].filter(e => {
-       const [ey, em] = e.date.split('-');
-       return parseInt(ey) === y && parseInt(em) === m + 1;
-    });
+// Old rule-based suggestion methods have been removed in favor of direct Gemini integration.
 
-    if (monthEvents.length > 0) {
-      const types = monthEvents.map(e => e.type);
-      if (types.includes('sports')) return 80;
-      if (types.includes('concert')) return 70;
-      if (types.includes('religious') || types.includes('public_holiday')) return 50;
-      return 40;
-    }
-    return 15;
-  };
-
-  const handlePricingSuggest = () => {
-    const thisMonthEvents = [...initialIndianHolidays, ...customEvents].filter(e => {
-       const [y, m] = e.date.split('-');
-       return parseInt(y) === year && parseInt(m) === month + 1;
-    });
-
-    if (thisMonthEvents.length > 0) {
-      const types = thisMonthEvents.map(e => e.type);
-      let insight = '';
-      const markup = getAiMarkupForMonth(year, month);
-
-      if (types.includes('sports')) {
-         insight = 'Due to an upcoming major sports match in your city this month, out-of-town fans will create a massive demand surge!';
-      } else if (types.includes('concert')) {
-         insight = 'A scheduled concert this month will draw heavy tourism. Bookings usually spike 2 weeks prior.';
-      } else if (types.includes('religious') || types.includes('public_holiday')) {
-         insight = 'Upcoming religious or public holidays detected. Families will be traveling locally.';
-      } else {
-         insight = 'Custom events detected in your area.';
-      }
-
-      alert(`🤖 AI Pricing Insight for ${currentDate.toLocaleString('default', { month: 'long' })}:\n\n${insight}\n\nRecommendation: Increase base room rates by up to ${markup}% on and immediately surrounding these dates to maximize revenue.`);
-    } else {
-      alert(`🤖 AI Pricing Insight for ${currentDate.toLocaleString('default', { month: 'long' })}:\n\nNo major events detected for this month. Maintain baseline competitive pricing to ensure steady occupancy.`);
-    }
-  };
-
-  const handleAddEvent = (e) => {
+  const handleAddEvent = async (e) => {
     e.preventDefault();
     if(newEventDate && newEventName) {
-       setCustomEvents([...customEvents, { 
-         id: `custom-${Date.now()}`, 
-         date: newEventDate, 
-         name: newEventName, 
-         type: newEventType 
-       }]);
-       setIsModalOpen(false);
-       setNewEventDate('');
-       setNewEventName('');
-       setNewEventType('other');
+       setIsAnalyzing(true);
+       try {
+         const token = localStorage.getItem('token') || 'test';
+         const res = await fetch('http://localhost:5001/api/pricing/dynamic-recommendation', {
+           method: 'POST',
+           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+           body: JSON.stringify({ eventDescription: newEventName, date: newEventDate })
+         });
+         const data = await res.json();
+         
+         if (!res.ok) {
+            alert(data.message || data.error || 'Failed to get AI recommendation');
+            setIsAnalyzing(false);
+            return;
+         }
+
+         setCustomEvents([...customEvents, { 
+           id: `custom-${Date.now()}`, 
+           date: newEventDate, 
+           name: newEventName, 
+           type: 'ai_processed',
+           aiMultiplier: data.suggestedMultiplier || 1.15,
+           aiInsight: data.message || 'Custom event registered.'
+         }]);
+         
+         setIsModalOpen(false);
+         setNewEventDate('');
+         setNewEventName('');
+       } catch (err) {
+         console.error('Error fetching AI data', err);
+         alert('Network error connecting to AI engine.');
+       } finally {
+         setIsAnalyzing(false);
+       }
     }
   };
 
@@ -130,7 +113,8 @@ export default function Calendar() {
     let finalPrice = basePrice;
     
     if (isHoliday) {
-      if (holidayObj.type === 'sports') finalPrice = basePrice * 1.8;
+      if (holidayObj.aiMultiplier) finalPrice = basePrice * parseFloat(holidayObj.aiMultiplier);
+      else if (holidayObj.type === 'sports') finalPrice = basePrice * 1.8;
       else if (holidayObj.type === 'concert') finalPrice = basePrice * 1.7;
       else if (holidayObj.type === 'religious' || holidayObj.type === 'public_holiday') finalPrice = basePrice * 1.5;
       else finalPrice = basePrice * 1.4;
@@ -225,10 +209,10 @@ export default function Calendar() {
         {isToday && (
           <div className="mt-2 pt-2 border-t border-primary-200 dark:border-primary-800/50 flex flex-col gap-1 items-center bg-white/50 dark:bg-dark-900/50 p-1.5 rounded-md animate-in fade-in zoom-in duration-300">
             <div className="flex items-center gap-1 text-[9px] font-bold text-orange-600 dark:text-orange-400 uppercase tracking-wide">
-              <TrendingUp className="w-3 h-3" /> High Demand!
+              <TrendingUp className="w-3 h-3" /> High Demand
             </div>
             <button className="w-full bg-primary-600 hover:bg-primary-700 text-white text-[10px] font-medium py-1.5 rounded transition-colors shadow-sm">
-              Increase +{getAiMarkupForMonth(renderY, renderM)}%
+              Current AI Rate
             </button>
           </div>
         )}
@@ -246,15 +230,9 @@ export default function Calendar() {
         <div className="flex gap-3">
           <button 
             onClick={() => setIsModalOpen(true)}
-            className="btn-secondary flex items-center gap-2"
+            className="btn-primary flex items-center gap-2"
           >
             <Plus className="w-4 h-4" /> Add Event
-          </button>
-          <button 
-            onClick={handlePricingSuggest}
-            className="btn-primary flex items-center gap-2 bg-gradient-to-r from-purple-600 to-primary-600 border-0"
-          >
-            <Zap className="w-4 h-4 text-yellow-300" /> Get AI Suggestions
           </button>
         </div>
       </div>
@@ -323,27 +301,19 @@ export default function Calendar() {
               <X className="w-5 h-5" />
             </button>
             <h3 className="text-lg font-bold mb-4">Add Custom Event</h3>
-            <p className="text-xs text-gray-500 mb-4">AI uses the event type to suggest real-world optimal price multipliers.</p>
+            <p className="text-xs text-gray-500 mb-4">Describe the event in detail. Gemini AI will research the event's impact and suggest an intelligent price markup.</p>
             <form onSubmit={handleAddEvent} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Event Name</label>
-                <input required type="text" value={newEventName} onChange={e => setNewEventName(e.target.value)} className="input-field" placeholder="e.g. World Cup Match" />
+                <label className="block text-sm font-medium mb-1">Event Description</label>
+                <textarea required rows="3" value={newEventName} onChange={e => setNewEventName(e.target.value)} className="input-field w-full" placeholder="e.g. CSK vs RCB IPL match at Narendra Modi Stadium, Ahmedabad" />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Date</label>
                 <input required type="date" value={newEventDate} onChange={e => setNewEventDate(e.target.value)} className="input-field" />
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Event Type</label>
-                <select value={newEventType} onChange={e => setNewEventType(e.target.value)} className="input-field py-2.5">
-                  <option value="sports">Major Sports Match (Cricket, Football)</option>
-                  <option value="concert">Concert / Festival / Show</option>
-                  <option value="religious">Religious Event / Public Holiday</option>
-                  <option value="corporate">Corporate Conference / Summit</option>
-                  <option value="other">Other High Demand Event</option>
-                </select>
-              </div>
-              <button type="submit" className="w-full btn-primary mt-4">Save Event Engine</button>
+              <button disabled={isAnalyzing} type="submit" className="w-full btn-primary mt-4 flex items-center justify-center gap-2">
+                {isAnalyzing ? <><Zap className="w-4 h-4 animate-pulse text-yellow-300" /> Analyzing with Gemini...</> : 'Save & Analyze'}
+              </button>
             </form>
           </div>
         </div>

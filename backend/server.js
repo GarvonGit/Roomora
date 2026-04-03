@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const Razorpay = require('razorpay');
 const nodemailer = require('nodemailer');
 const { Pool } = require('pg');
+const { GoogleGenAI } = require('@google/genai');
 
 // Load env vars
 dotenv.config();
@@ -48,8 +49,8 @@ const pool = {
     if (q.includes('FROM bookings')) {
         const today = new Date();
         return { rows: [
-            { id: 1, guest_name: 'John Doe', room_type: 'Standard Room', check_in: '2026-04-01', check_out: '2026-04-05', platform_name: 'booking', price: 5000, status: 'confirmed', created_at: today },
-            { id: 2, guest_name: 'Jane Smith', room_type: 'Deluxe Room', check_in: '2026-04-02', check_out: '2026-04-06', platform_name: 'airbnb', price: 7500, status: 'confirmed', created_at: today }
+            { id: 1, guest_name: 'John Doe', room_type: 'Standard Room', check_in: '2026-04-01', check_out: '2026-04-05', ota_source: 'booking', platform_name: 'booking', price: 5000, status: 'confirmed', created_at: today },
+            { id: 2, guest_name: 'Jane Smith', room_type: 'Deluxe Room', check_in: '2026-04-02', check_out: '2026-04-06', ota_source: 'airbnb', platform_name: 'airbnb', price: 7500, status: 'confirmed', created_at: today }
         ]};
     }
     
@@ -443,13 +444,57 @@ app.get('/api/integrations', authenticateToken, async (req, res) => {
     }
 });
 
-app.post('/api/pricing/dynamic-recommendation', authenticateToken, (req, res) => {
-    const { demand, occupancy, isHoliday } = req.body;
-    let multiplier = 1;
-    if (occupancy > 80) multiplier += 0.2;
-    if (isHoliday) multiplier += 0.3;
-    if (demand === 'High') multiplier += 0.2;
-    res.json({ suggestedMultiplier: multiplier, message: 'Price recommended based on demand.' });
+// Initialize Gemini AI
+const ai = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY || 'missing-key'
+});
+
+app.post('/api/pricing/dynamic-recommendation', authenticateToken, async (req, res) => {
+    const { eventDescription, date } = req.body;
+    
+    if (!process.env.GEMINI_API_KEY) {
+        return res.status(400).json({ 
+            error: "Missing API Key", 
+            message: "Please add GEMINI_API_KEY to your backend/.env file to use the AI engine." 
+        });
+    }
+
+    try {
+        const prompt = `
+        You are an expert hotel revenue manager and pricing algorithm.
+        An event is happening on ${date}. The event is described as: "${eventDescription}".
+        
+        Analyze this event's potential impact on hotel room demand (consider factors like fan craze, out-of-town visitors, typical attendance).
+        Based on this, suggest a percentage markup to apply to the base room price. 
+        Return ONLY a JSON object exactly in this format (no markdown or backticks):
+        {
+          "suggestedMultiplier": 1.5, // e.g. 1.5 means +50%, 2.0 means +100%. Choose between 1.0 and 3.0.
+          "message": "Your rationale here" // 1-2 short sentences explaining why
+        }
+        `;
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+            config: {
+                temperature: 0.2,
+                responseMimeType: "application/json"
+            }
+        });
+
+        let aimarkup;
+        try {
+            aimarkup = JSON.parse(response.text);
+        } catch(e) {
+            console.error('JSON parsing failed:', e, response.text);
+            aimarkup = { suggestedMultiplier: 1.2, message: "Demand detected, increasing by 20%." };
+        }
+
+        res.json(aimarkup);
+    } catch(err) {
+        console.error('Gemini call failed:', err);
+        res.status(500).json({ message: 'Error retrieving AI recommendation. Check your API key or network status.' });
+    }
 });
 
 // --- Payment & Billing (Razorpay) ---
