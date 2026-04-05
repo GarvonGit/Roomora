@@ -30,6 +30,16 @@ const transporter = nodemailer.createTransport({
     auth: { user: "mock@ethereal.email", pass: "mock123" }
 });
 
+// In-Memory Live Inventory System (Mocking DB)
+const dbRooms = [
+    { id: 1, type: 'Standard Room', total_count: 15, base_price: 1500 },
+    { id: 2, type: 'Deluxe Room', total_count: 10, base_price: 2500 },
+    { id: 3, type: 'Executive Suite', total_count: 5, base_price: 4500 },
+    { id: 4, type: 'Presidential Suite', total_count: 2, base_price: 8000 }
+];
+
+let dateWiseInventory = {}; // Maps 'YYYY-MM-DD' => { roomId: availableCount }
+
 // Configure a COMPLETE MOCK of PostgreSQL Pool to bypass paused Supabase ENOTFOUND errors
 const pool = {
   query: async (text, params) => {
@@ -45,13 +55,62 @@ const pool = {
         return { rows: [{ id: 201, hotel_name: 'The Grand Roomora (Demo)' }] };
     }
     
+    // Mock Dashboard Analytics: Overview
+    if (q.includes('FROM hotels')) {
+        return { rows: [{ id: 201, name: 'Grand Sunset Resort', base_currency: 'INR' }] };
+    }
+    
     // Mock Dashboard Analytics: Bookings
     if (q.includes('FROM bookings')) {
-        const today = new Date();
-        return { rows: [
-            { id: 1, guest_name: 'John Doe', room_type: 'Standard Room', check_in: '2026-04-01', check_out: '2026-04-05', ota_source: 'booking', platform_name: 'booking', price: 5000, status: 'confirmed', created_at: today },
-            { id: 2, guest_name: 'Jane Smith', room_type: 'Deluxe Room', check_in: '2026-04-02', check_out: '2026-04-06', ota_source: 'airbnb', platform_name: 'airbnb', price: 7500, status: 'confirmed', created_at: today }
-        ]};
+        const mockBookings = [];
+        let idCounter = 1;
+        const platforms = ['Booking.com', 'Airbnb', 'Agoda', 'MakeMyTrip'];
+        const rooms = [
+            { type: 'Standard Room', price: 1500 },
+            { type: 'Deluxe Room', price: 2500 },
+            { type: 'Executive Suite', price: 4500 },
+            { type: 'Presidential Suite', price: 8000 }
+        ];
+        
+        // Generate daily data up to April 15th
+        for (let day = 1; day <= 15; day++) {
+            // Random demand variations
+            let bookingsToday = Math.floor(Math.random() * 4) + 2; 
+            if (day === 5 || day === 6 || day === 12 || day === 13) bookingsToday += 5; // Weekend spikes
+            
+            for (let i = 0; i < bookingsToday; i++) {
+                const plat = platforms[Math.floor(Math.random() * platforms.length)];
+                const room = rooms[Math.floor(Math.random() * rooms.length)];
+                // Random multi-night stays and dynamic pricing variations
+                const nights = Math.floor(Math.random() * 3) + 1;
+                const finalPrice = Math.floor((room.price * nights) * (1 + (Math.random() * 0.3))); 
+                
+                const createdDate = new Date(`2026-04-${String(day).padStart(2, '0')}T10:00:00Z`);
+                
+                mockBookings.push({
+                    id: idCounter++,
+                    guest_name: 'Mocked Guest',
+                    room_type: room.type,
+                    check_in: createdDate,
+                    check_out: new Date(createdDate.getTime() + (86400000 * nights)),
+                    ota_source: plat,
+                    platform_name: plat,
+                    price: finalPrice,
+                    status: 'confirmed',
+                    created_at: createdDate
+                });
+            }
+        }
+
+        // Add pure historical monthly volume for Jan - March
+        for (let m = 1; m <= 3; m++) {
+            const historicalDate = new Date(`2026-0${m}-15T10:00:00Z`);
+            mockBookings.push({ id: idCounter++, guest_name: 'Bulk', room_type: 'Standard Room', created_at: historicalDate, price: 120000 + (Math.random()*40000), platform_name: 'MakeMyTrip' });
+            mockBookings.push({ id: idCounter++, guest_name: 'Bulk', room_type: 'Deluxe Room', created_at: historicalDate, price: 180000 + (Math.random()*60000), platform_name: 'Booking.com' });
+            mockBookings.push({ id: idCounter++, guest_name: 'Bulk', room_type: 'Executive Suite', created_at: historicalDate, price: 90000 + (Math.random()*20000), platform_name: 'Agoda' });
+        }
+
+        return { rows: mockBookings };
     }
     
     if (q.includes('count(*) FROM ota_integrations')) {
@@ -66,12 +125,9 @@ const pool = {
         ]};
     }
     
-    // Mock Inventory
+    // Mock Inventory (4 Room Types as requested)
     if (q.includes('FROM rooms')) {
-        return { rows: [
-            { id: 1, type: 'Standard Room', total_count: 10, available: 5, base_price: 1500 },
-            { id: 2, type: 'Deluxe Room', total_count: 5, available: 2, base_price: 2500 }
-        ]};
+        return { rows: dbRooms.map(r => ({ ...r, available: r.total_count })) };
     }
 
     return { rows: [] };
@@ -192,6 +248,50 @@ app.post('/api/auth/signup', async (req, res) => {
         console.error('Signup Error:', err);
         res.status(500).json({ message: 'Internal Server Error' });
     }
+});
+
+// --- Live Inventory Management APIs ---
+app.get('/api/inventory', authenticateToken, (req, res) => {
+    let targetDate = req.query.date;
+    if (!targetDate) {
+        targetDate = new Date().toISOString().split('T')[0];
+    }
+    const result = dbRooms.map(room => {
+        const avail = dateWiseInventory[targetDate] && dateWiseInventory[targetDate][room.id] !== undefined 
+          ? dateWiseInventory[targetDate][room.id] 
+          : room.total_count;
+        return { ...room, available: avail };
+    });
+    res.json(result);
+});
+
+// Manual Offline Sale Update
+app.post('/api/inventory/update', authenticateToken, (req, res) => {
+    const { id, sold_count, date } = req.body;
+    let targetDate = date || new Date().toISOString().split('T')[0];
+    
+    if (!dateWiseInventory[targetDate]) dateWiseInventory[targetDate] = {};
+    const room = dbRooms.find(r => r.id === id);
+    if (!room) return res.status(404).json({ success: false, message: 'Room not found' });
+    
+    dateWiseInventory[targetDate][id] = Math.max(0, room.total_count - sold_count);
+    res.json({ success: true, message: `Inventory updated for ${targetDate}` });
+});
+
+// Simulated OTA Webhook Sync (MakeMyTrip, Agoda, etc.)
+app.post('/api/inventory/webhook-sync', (req, res) => {
+    const { platform, roomId, quantity, date } = req.body;
+    let targetDate = date || new Date().toISOString().split('T')[0];
+    
+    if (!dateWiseInventory[targetDate]) dateWiseInventory[targetDate] = {};
+    const room = dbRooms.find(r => r.id === roomId);
+    if (!room) return res.json({ success: false });
+
+    const currentAvail = dateWiseInventory[targetDate][roomId] !== undefined ? dateWiseInventory[targetDate][roomId] : room.total_count;
+    dateWiseInventory[targetDate][roomId] = Math.max(0, currentAvail - quantity);
+    
+    console.log(`[Webhook] Real-time sync from ${platform} for ${targetDate}: Sold ${quantity}x Unit ${roomId}`);
+    res.json({ success: true, message: `Successfully synced inventory from ${platform} for ${targetDate}` });
 });
 
 app.post('/api/auth/login', async (req, res) => {
@@ -494,6 +594,123 @@ app.post('/api/pricing/dynamic-recommendation', authenticateToken, async (req, r
     } catch(err) {
         console.error('Gemini call failed:', err);
         res.status(500).json({ message: 'Error retrieving AI recommendation. Check your API key or network status.' });
+    }
+});
+
+// Full Month AI Forecast generator for all rooms
+app.post('/api/pricing/monthly-forecast', authenticateToken, async (req, res) => {
+    const { year, month, events, todayDate } = req.body; // events is an array of custom/public holidays
+    
+    if (!process.env.GEMINI_API_KEY) {
+        return res.status(400).json({ error: "Missing API Key", message: "Please add GEMINI_API_KEY to your backend/.env" });
+    }
+
+    try {
+        const prompt = `
+        You are "Roomora AI", an expert AI hotel revenue manager.
+        Generate a daily hotel pricing forecast for the month of ${year}-${month}.
+        Today's current real-world date is: ${todayDate}.
+
+        There are predefined events happening: ${JSON.stringify(events)}.
+        Current extremely accurate LIVE Date-Wise hotel inventory constraint: ${JSON.stringify(dateWiseInventory)}. The map keys are YYYY-MM-DD dates, the values map RoomID to unsold available rooms. If a date is missing, standard capacity applies.
+        
+        CRITICAL RULES FOR PROGRESSIVE YIELD PRICING BASED ON LIVE INVENTORY:
+        1. Liquidate Vastly Empty Rooms (Pacing): If a forecast date is within the next 1 to 4 days from Today, and the dateWiseInventory shows > 50% available rooms for that date, heavily DISCOUNT the price (multiplier 0.6 to 0.8) to fill the empty rooms. The primary goal is saving sunk costs.
+        2. Unsold Weekend Drops: If a weekend is approaching within 1 to 4 days and that specific date remains mostly empty, abandon the standard weekend premium and slash prices to 0.8 - 0.95 to capture budget last-minute travelers.
+        3. Scarcity Premium: If rooms are almost sold out (<= 2 rooms available) on a specific date, aggressively INFLATE the base prices (1.4 - 1.8) for that day because the remaining rooms are highly coveted!
+        4. Future Booking Buffer: For forecast dates that are 10+ days away in the future, maintain steady standard multipliers (1.0 to 1.15) to allow standard organic bookings. Do not discount future dates yet.
+        5. Event Days: If there's a predefined event, keep a massive markup (1.5 to 2.5) regardless of how close it is. Demand is inelastic.
+
+        Return ONLY a JSON object mapping the day of the month (1-31) to its suggested multiplier and a short rationale insight.
+        The insight MUST sound confident as an AI strategy, mentioning proximity to Today and the need to liquidate unsold rooms if applicable.
+        Format EXACTLY like this:
+        {
+          "forecast": {
+            "1": { "multiplier": 0.7, "insight": "Day is only 2 days away. Aggressive fire-sale multiplier to liquidate empty rooms." },
+            "2": { "multiplier": 0.8, "insight": "Approaching weekend but rooms are unsold. Discounting to capture last-minute bookers." },
+            "15": { "multiplier": 1.8, "insight": "Major IPL Match brings massive demand surge. Keeping premium intact." },
+            "25": { "multiplier": 1.05, "insight": "Date is far enough in the future. Maintaining base rate for organic growth." }
+          }
+        }
+        No markdown formatting or backticks, just the raw JSON.
+        `;
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+            config: {
+                temperature: 0.1,
+                responseMimeType: "application/json"
+            }
+        });
+
+        const forecastData = JSON.parse(response.text);
+        
+        // Dynamically pull our 4 room types to map the multipliers
+        res.json({
+           success: true,
+           forecast: forecastData.forecast,
+           baseRooms: [
+             { type: 'Standard Room', price: 1500 },
+             { type: 'Deluxe Room', price: 2500 },
+             { type: 'Executive Suite', price: 4500 },
+             { type: 'Presidential Suite', price: 8000 }
+           ]
+        });
+    } catch (err) {
+        console.error('Monthly forecast failed:', err);
+        
+        console.log("Falling back to simulated Dynamic Sample Data to keep the system running offline without a valid GenAI key...");
+        const fallbackForecast = {};
+        const totalDays = new Date(year, month, 0).getDate();
+        
+        // Helper to check if a day is a weekend
+        const isWeekend = (day) => {
+            const date = new Date(year, month - 1, day);
+            const dayOfWeek = date.getDay();
+            return dayOfWeek === 0 || dayOfWeek === 5 || dayOfWeek === 6; // Fri, Sat, Sun
+        };
+
+        // Create a map of event days
+        const eventDays = {};
+        if (events && Array.isArray(events)) {
+            events.forEach(evt => {
+                const evtDate = new Date(evt.date);
+                if (evtDate.getFullYear() === year && (evtDate.getMonth() + 1) === month) {
+                    eventDays[evtDate.getDate()] = evt.name || evt.title;
+                }
+            });
+        }
+
+        for (let i = 1; i <= totalDays; i++) {
+            if (eventDays[i]) {
+                fallbackForecast[i] = {
+                    multiplier: 1.85,
+                    insight: `[Mock Data] Massive demand surge expected for ${eventDays[i]}. Inflating prices heavily.`
+                };
+            } else if (isWeekend(i)) {
+                fallbackForecast[i] = {
+                    multiplier: 1.25,
+                    insight: `[Mock Data] Standard weekend premium applied for high organic demand.`
+                };
+            } else {
+                fallbackForecast[i] = {
+                    multiplier: 0.90,
+                    insight: `[Mock Data] Weekday occupancy is typically lower. Slight discount applied to boost sales.`
+                };
+            }
+        }
+
+        res.json({ 
+           success: true, 
+           forecast: fallbackForecast,
+           baseRooms: [
+             { type: 'Standard Room', price: 1500 },
+             { type: 'Deluxe Room', price: 2500 },
+             { type: 'Executive Suite', price: 4500 },
+             { type: 'Presidential Suite', price: 8000 }
+           ]
+        });
     }
 });
 

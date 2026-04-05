@@ -3,12 +3,14 @@ import { RefreshCw, Edit, X } from 'lucide-react';
 import api from '../utils/api';
 
 export default function Inventory() {
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [rooms, setRooms] = useState([]);
   const [isSyncing, setIsSyncing] = useState(false);
   
-  // Price Update Modal State
+  // Price & Inventory Modal State
   const [editingRoom, setEditingRoom] = useState(null);
   const [newPrice, setNewPrice] = useState('');
+  const [newAvailable, setNewAvailable] = useState(0);
   const [selectedPlatforms, setSelectedPlatforms] = useState({
     'Booking.com': true,
     'Agoda': true,
@@ -20,11 +22,11 @@ export default function Inventory() {
 
   useEffect(() => {
     fetchInventory();
-  }, []);
+  }, [selectedDate]);
 
   const fetchInventory = async () => {
     try {
-      const res = await api.get('/inventory');
+      const res = await api.get(`/inventory?date=${selectedDate}`);
       setRooms(res.data);
     } catch (err) {
       console.error(err);
@@ -45,6 +47,7 @@ export default function Inventory() {
   const openEditModal = (room) => {
     setEditingRoom(room);
     setNewPrice(room.base_price);
+    setNewAvailable(room.available);
     setUpdateStatus({ loading: false, message: '', error: false });
   };
 
@@ -73,11 +76,19 @@ export default function Inventory() {
         platforms
       });
       
-      setUpdateStatus({ loading: false, message: res.data.message, error: false });
+      let invMsg = '';
+      if (Number(newAvailable) !== editingRoom.available) {
+        const soldCount = editingRoom.total_count - Number(newAvailable);
+        await api.post('/inventory/update', { id: editingRoom.id, sold_count: soldCount, date: selectedDate });
+        invMsg = ' & Inventory synced';
+        fetchInventory(); // refresh list to secure new available count
+      }
+      
+      setUpdateStatus({ loading: false, message: res.data.message + invMsg, error: false });
       setLogs(res.data.logs);
       
-      // Update local state
-      setRooms(rooms.map(r => r.id === editingRoom.id ? { ...r, base_price: Number(newPrice) } : r));
+      // Update local state for price
+      setRooms(rooms.map(r => r.id === editingRoom.id ? { ...r, base_price: Number(newPrice), available: Number(newAvailable) } : r));
       
       // Auto close after success
       setTimeout(() => {
@@ -88,6 +99,23 @@ export default function Inventory() {
     }
   };
 
+  const handleQuickInventoryChange = async (room, delta) => {
+    const newAvailable = Math.min(Math.max(0, room.available + delta), room.total_count);
+    if (newAvailable === room.available) return;
+    
+    // Instantly update UI for snappy feedback
+    setRooms(rooms.map(r => r.id === room.id ? { ...r, available: newAvailable } : r));
+
+    const soldCount = room.total_count - newAvailable;
+    
+    try {
+      await api.post('/inventory/update', { id: room.id, sold_count: soldCount, date: selectedDate });
+    } catch(err) {
+      console.error('Failed to quick update inventory:', err);
+      fetchInventory(); // Revert on failure
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center mb-6">
@@ -95,14 +123,22 @@ export default function Inventory() {
           <h2 className="text-xl font-semibold mb-1">Master Inventory & Channel Sync</h2>
           <p className="text-gray-500 text-sm">Manage room availability and dynamic pricing across all platforms</p>
         </div>
-        <button 
-          onClick={handleSync}
-          disabled={isSyncing}
-          className="btn-primary flex items-center gap-2"
-        >
-          <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-          {isSyncing ? 'Syncing...' : 'Update All Channels'}
-        </button>
+        <div className="flex items-center gap-4">
+          <input 
+            type="date" 
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="input-field py-2"
+          />
+          <button 
+            onClick={handleSync}
+            disabled={isSyncing}
+            className="btn-primary flex items-center gap-2"
+          >
+            <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+            {isSyncing ? 'Syncing...' : 'Update All Channels'}
+          </button>
+        </div>
       </div>
 
       <div className="card overflow-x-auto">
@@ -122,13 +158,26 @@ export default function Inventory() {
                 <td className="py-4 px-4 font-medium">{room.type}</td>
                 <td className="py-4 px-4">{room.total_count}</td>
                 <td className="py-4 px-4">
-                  <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                    room.available > 5 
-                      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
-                      : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                  }`}>
-                    {room.available} Left
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center bg-gray-100 dark:bg-dark-800 rounded-lg p-1">
+                      <button 
+                        onClick={() => handleQuickInventoryChange(room, -1)}
+                        disabled={room.available <= 0}
+                        className="w-6 h-6 flex items-center justify-center text-gray-500 hover:bg-white dark:hover:bg-dark-700 rounded shadow-sm disabled:opacity-30 transition-all font-bold"
+                      >-</button>
+                      <span className={`w-8 text-center text-sm font-bold ${
+                        room.available <= 2 ? 'text-red-500' : 'text-green-600 dark:text-green-400'
+                      }`}>
+                        {room.available}
+                      </span>
+                      <button 
+                        onClick={() => handleQuickInventoryChange(room, 1)}
+                        disabled={room.available >= room.total_count}
+                        className="w-6 h-6 flex items-center justify-center text-gray-500 hover:bg-white dark:hover:bg-dark-700 rounded shadow-sm disabled:opacity-30 transition-all font-bold"
+                      >+</button>
+                    </div>
+                    <span className="text-xs text-gray-400">/ {room.total_count}</span>
+                  </div>
                 </td>
                 <td className="py-4 px-4 font-medium">₹{room.base_price.toLocaleString('en-IN')}/night</td>
                 <td className="py-4 px-4 text-right">
@@ -162,7 +211,7 @@ export default function Inventory() {
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-dark-900 rounded-xl w-full max-w-md shadow-xl overflow-hidden">
             <div className="flex justify-between items-center p-4 border-b border-gray-100 dark:border-dark-700">
-              <h3 className="font-semibold text-lg">Selective Price Update</h3>
+              <h3 className="font-semibold text-lg">Manage Room for {new Date(selectedDate).toLocaleDateString()}</h3>
               <button onClick={() => setEditingRoom(null)} className="text-gray-400 hover:text-gray-600">
                 <X className="w-5 h-5" />
               </button>
@@ -171,19 +220,37 @@ export default function Inventory() {
             <form onSubmit={handlePriceUpdate} className="p-5 space-y-4">
               <div>
                 <p className="text-sm font-medium text-gray-500 mb-1">Room Type</p>
-                <p className="font-semibold">{editingRoom.type}</p>
+                <div className="flex justify-between items-center">
+                  <p className="font-semibold">{editingRoom.type}</p>
+                  <p className="text-xs text-gray-400">Total Capacity: {editingRoom.total_count}</p>
+                </div>
               </div>
 
-              <div>
-                <label className="text-sm font-medium mb-1 block">New Price (₹)</label>
-                <input 
-                  type="number" 
-                  required 
-                  value={newPrice}
-                  onChange={(e) => setNewPrice(e.target.value)}
-                  className="input-field"
-                  placeholder="e.g. 2000"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium mb-1 block">New Price (₹)</label>
+                  <input 
+                    type="number" 
+                    required 
+                    value={newPrice}
+                    onChange={(e) => setNewPrice(e.target.value)}
+                    className="input-field"
+                    placeholder="e.g. 2000"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Available Rooms</label>
+                  <input 
+                    type="number" 
+                    required 
+                    min="0"
+                    max={editingRoom.total_count}
+                    value={newAvailable}
+                    onChange={(e) => setNewAvailable(e.target.value)}
+                    className="input-field"
+                    placeholder="Unsold count"
+                  />
+                </div>
               </div>
 
               <div className="pt-2">
