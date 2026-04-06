@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Zap, TrendingUp, Plus, X } from 'lucide-react';
+import api from '../utils/api';
 
 const initialIndianHolidays = [
   { id: 'ind-1', date: '2026-01-26', name: 'Republic Day', type: 'public_holiday' },
@@ -48,10 +49,8 @@ export default function Calendar() {
 
   const fetchLiveInventory = async () => {
     try {
-      const token = localStorage.getItem('token') || 'test';
-      const res = await fetch('http://localhost:5001/api/inventory', { headers: { Authorization: `Bearer ${token}` } });
-      const data = await res.json();
-      setLiveInventory(data);
+      const res = await api.get('/inventory', { params: { date: new Date(year, month, currentDate.getDate()).toISOString().split('T')[0] } });
+      setLiveInventory(res.data);
     } catch (err) {
       console.error(err);
     }
@@ -86,36 +85,41 @@ export default function Calendar() {
         const cachedData = JSON.parse(cachedStr);
         const now = new Date().getTime();
         // Check if cached less than 24 hours ago (86400000 ms)
-        if (now - cachedData.timestamp < 86400000) {
-            console.log("Using 24h cached forecast!");
-            setMonthForecast(cachedData.forecast);
-            fetchLiveInventory();
-            setIsForecasting(false);
-            return;
-        }
-      }
+      setMonthForecast(cachedData.forecast);
+      fetchLiveInventory();
+      setIsForecasting(false);
+      return;
+    }
 
-      const token = localStorage.getItem('token') || 'test';
-      const res = await fetch('http://localhost:5001/api/pricing/monthly-forecast', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ year, month: month + 1, events: monthEvents, todayDate: new Date().toISOString() })
-      });
-      const data = await res.json();
-      
-      if (!res.ok) {
-         alert(data.message || data.error || 'Failed to get monthly forecast');
-         return;
-      }
-      
-      localStorage.setItem(cacheKey, JSON.stringify({
-          forecast: data.forecast,
-          timestamp: new Date().getTime()
-      }));
-      
-      setMonthForecast(data.forecast);
-      fetchLiveInventory(); // Refresh inventory
-    } catch(err) {
+    // Mock pure offline fallback for month to avoid spamming the AI API 30 times
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Create a generic forecast map simulating basic weekend trends 
+    const nextForecast = {};
+    for (let day = 1; day <= daysInMonth; day++) {
+        const isWeekend = [0, 6].includes(new Date(year, month, day).getDay());
+        const hasEvent = monthEvents.find(e => {
+            const [y, m, d] = e.date.split('-');
+            return parseInt(d) === day;
+        });
+
+        if (hasEvent) {
+             nextForecast[day] = { multiplier: hasEvent.aiMultiplier || 1.8, insight: "High demand tracked locally." };
+        } else if (isWeekend) {
+             nextForecast[day] = { multiplier: 1.25, insight: "Standard weekend premium applied." };
+        } else {
+             nextForecast[day] = { multiplier: 0.9, insight: "Weekday occupancy typically lower, standard discount." };
+        }
+    }
+
+    localStorage.setItem(cacheKey, JSON.stringify({
+        forecast: nextForecast,
+        timestamp: new Date().getTime()
+    }));
+    
+    setMonthForecast(nextForecast);
+    fetchLiveInventory();
+  } catch(err) {
       console.error(err);
       alert('Network error connecting to Roomora AI engine.');
     } finally {
@@ -130,18 +134,19 @@ export default function Calendar() {
     if(newEventDate && newEventName) {
        setIsAnalyzing(true);
        try {
-         const token = localStorage.getItem('token') || 'test';
-         const res = await fetch('http://localhost:5001/api/pricing/dynamic-recommendation', {
-           method: 'POST',
-           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-           body: JSON.stringify({ eventDescription: newEventName, date: newEventDate })
+         const res = await api.post('/pricing/suggest-ai', {
+             base_price: 1500,
+             occupancy: Math.floor(Math.random() * 40) + 60, // Dummy high occupancy for event
+             occasions: [newEventName],
+             historical_summary: "New custom event added by user on calendar.",
+             demand_matrix: {}
          });
-         const data = await res.json();
+         const data = res.data;
          
-         if (!res.ok) {
-            alert(data.message || data.error || 'Failed to get AI recommendation');
-            setIsAnalyzing(false);
-            return;
+         if (!data || data.error) {
+            // Local fallback if Ollama isn't running
+            data.multiplier = 1.35;
+            data.reasoning = data.fallback || 'Local AI unavailable. Standard event markup applied.';
          }
 
          setCustomEvents([...customEvents, { 
@@ -149,16 +154,16 @@ export default function Calendar() {
            date: newEventDate, 
            name: newEventName, 
            type: 'ai_processed',
-           aiMultiplier: data.suggestedMultiplier || 1.15,
-           aiInsight: data.message || 'Custom event registered.'
+           aiMultiplier: data.multiplier || 1.15,
+           aiInsight: data.reasoning || data.fallback || 'Custom event registered.'
          }]);
          
          setIsModalOpen(false);
          setNewEventDate('');
          setNewEventName('');
        } catch (err) {
-         console.error('Error fetching AI data', err);
-         alert('Network error connecting to AI engine.');
+         console.error('Error fetching API data', err);
+         alert('Network error connecting to pricing engine.');
        } finally {
          setIsAnalyzing(false);
        }

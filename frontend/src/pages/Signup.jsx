@@ -31,8 +31,11 @@ export default function Signup() {
       <div className="w-full max-w-md card space-y-8 p-8">
         <div className="text-center">
           <div className="flex justify-center mb-4">
-            <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900/30 rounded-xl flex items-center justify-center">
-              <BedDouble className="w-6 h-6 text-primary-600 dark:text-primary-400" />
+            <div className="text-2xl font-black tracking-tighter text-blue-900 dark:text-white flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 shadow-lg shadow-blue-500/30 flex items-center justify-center">
+                 <span className="text-white text-lg leading-none">R</span>
+              </div>
+              Roomora<span className="text-blue-600 dark:text-primary-500">.</span>
             </div>
           </div>
           <h2 className="text-2xl font-bold mb-2">Create Account</h2>

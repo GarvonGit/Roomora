@@ -19,6 +19,8 @@ export default function Inventory() {
   });
   const [updateStatus, setUpdateStatus] = useState({ loading: false, message: '', error: false });
   const [logs, setLogs] = useState([]);
+  const [isAILoading, setIsAILoading] = useState(false);
+  const [aiSuggestionStr, setAiSuggestionStr] = useState('');
 
   useEffect(() => {
     fetchInventory();
@@ -49,6 +51,7 @@ export default function Inventory() {
     setNewPrice(room.base_price);
     setNewAvailable(room.available);
     setUpdateStatus({ loading: false, message: '', error: false });
+    setAiSuggestionStr('');
   };
 
   const handlePlatformToggle = (platform) => {
@@ -113,6 +116,38 @@ export default function Inventory() {
     } catch(err) {
       console.error('Failed to quick update inventory:', err);
       fetchInventory(); // Revert on failure
+    }
+  };
+
+  const handleAskAI = async () => {
+    setIsAILoading(true);
+    setUpdateStatus({ loading: false, message: 'Analyzing data locally...', error: false });
+    setAiSuggestionStr('');
+    try {
+      const occupancy = editingRoom.total_count > 0 
+        ? Math.round(((editingRoom.total_count - newAvailable) / editingRoom.total_count) * 100) 
+        : 0;
+        
+      const res = await api.post('/pricing/suggest-ai', {
+        base_price: Number(editingRoom.base_price),
+        occupancy: occupancy,
+        occasions: [], // Could fetch holidays here
+        historical_summary: "Typical local demand for this time.",
+        demand_matrix: { "weekend": false }
+      });
+      
+      const data = res.data;
+      if (data.error) {
+        setUpdateStatus({ loading: false, message: data.error + ': ' + data.fallback, error: true });
+      } else {
+        setNewPrice(data.suggested_price || Math.floor(editingRoom.base_price * data.multiplier));
+        setUpdateStatus({ loading: false, message: 'AI Suggestion APPLIED automatically.', error: false });
+        setAiSuggestionStr(`Reasoning: ${data.reasoning} | Confidence: ${data.confidence}%`);
+      }
+    } catch(err) {
+      setUpdateStatus({ loading: false, message: 'Local AI failed to respond', error: true });
+    } finally {
+      setIsAILoading(false);
     }
   };
 
@@ -237,6 +272,14 @@ export default function Inventory() {
                     className="input-field"
                     placeholder="e.g. 2000"
                   />
+                  <button 
+                    type="button" 
+                    onClick={handleAskAI} 
+                    disabled={isAILoading}
+                    className="mt-2 text-xs font-semibold px-2 py-1 bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 rounded hover:bg-purple-200 transition-colors flex items-center justify-center gap-1 w-full"
+                  >
+                    {isAILoading ? 'Thinking...' : '🤖 Ask Roomora AI'}
+                  </button>
                 </div>
                 <div>
                   <label className="text-sm font-medium mb-1 block">Available Rooms</label>
@@ -273,6 +316,12 @@ export default function Inventory() {
               {updateStatus.message && (
                 <div className={`p-3 rounded-lg text-sm ${updateStatus.error ? 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400' : 'bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400'}`}>
                   {updateStatus.message}
+                </div>
+              )}
+              
+              {aiSuggestionStr && (
+                <div className="p-3 bg-purple-50 border border-purple-100 rounded-lg text-xs text-purple-800 dark:bg-purple-900/10 dark:border-purple-800/30 dark:text-purple-300">
+                  {aiSuggestionStr}
                 </div>
               )}
 

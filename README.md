@@ -85,6 +85,42 @@ SMTP_HOST=smtp.ethereal.email
 SMTP_PORT=587
 SMTP_USER=mock@ethereal.email
 SMTP_PASS=mock123
+OLLAMA_URL=http://localhost:11434
+OLLAMA_MODEL=llama3.3
+```
+
+---
+
+## 🤖 AI Pricing Suggestion (Ollama)
+
+Roomora is powered by a **100% local, private, and unlimited AI Engine** built over Ollama (`llama3.3` or `qwen3.5:32b`). It calculates complex scarcity impacts (like Indian Festivals, weekend surges) natively on your server.
+*Note: Completely free, private, no API costs, runs on your server.*
+
+### 1. Install Ollama
+If you don't have Ollama, install it globally on Linux/macOS:
+```bash
+curl -fsSL https://ollama.com/install.sh | sh
+```
+For Windows, download from the [Ollama website](https://ollama.com/).
+
+### 2. Pull the AI Model
+```bash
+ollama pull llama3.3
+```
+
+### 3. Test the Local AI Endpoint
+Once the server is running, the frontend Inventory page's "Ask Roomora AI" will ping `/api/pricing/suggest-ai` seamlessly. You can also test it manually:
+```bash
+curl -X POST http://localhost:5001/api/pricing/suggest-ai \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <your-jwt-token>" \
+  -d '{
+    "base_price": 1500,
+    "occupancy": 85,
+    "occasions": ["Diwali Phase 1"],
+    "historical_summary": "High booking volume",
+    "demand_matrix": {"scarcity": true}
+  }'
 ```
 
 ---
