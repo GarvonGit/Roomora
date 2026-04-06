@@ -106,153 +106,338 @@ export default function LandingPage({ darkMode, setDarkMode }) {
           </Link>
         </motion.div>
 
-        {/* Dashboard Preview Image using a polished CSS layout mock */}
+        {/* Dashboard Preview Image - Ultra Premium CSS Mock */}
         <motion.div 
           initial={{ y: 60, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.5, type: 'spring', stiffness: 50 }}
-          className="mt-20 w-full max-w-5xl relative"
+          className="mt-20 w-full max-w-5xl relative group perspective-1000"
         >
-          <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl blur opacity-30 dark:opacity-40 animate-pulse" />
-          <div className="relative rounded-2xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-2xl p-2 md:p-4 overflow-hidden">
-            {/* Mock Dashboard Top Bar */}
-            <div className="flex items-center gap-2 mb-4 px-2">
-              <div className="flex gap-1.5">
-                <div className="w-3 h-3 rounded-full bg-red-500" />
-                <div className="w-3 h-3 rounded-full bg-yellow-500" />
-                <div className="w-3 h-3 rounded-full bg-green-500" />
+          {/* Ambient Glow */}
+          <div className="absolute -inset-4 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 rounded-3xl blur-2xl opacity-20 dark:opacity-40 group-hover:opacity-40 dark:group-hover:opacity-60 transition-opacity duration-700 animate-pulse" />
+          
+          <div className="relative rounded-3xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl border border-white/50 dark:border-slate-700/50 shadow-2xl shadow-blue-900/20 overflow-hidden transform transition-transform duration-700 hover:scale-[1.02]">
+            
+            {/* Mac OS Top Bar */}
+            <div className="flex items-center justify-between px-4 py-3 bg-slate-100/50 dark:bg-slate-950/50 border-b border-gray-200/50 dark:border-slate-800/50">
+              <div className="flex gap-2">
+                <div className="w-3.5 h-3.5 rounded-full bg-rose-400 border border-rose-500/50 shadow-sm" />
+                <div className="w-3.5 h-3.5 rounded-full bg-amber-400 border border-amber-500/50 shadow-sm" />
+                <div className="w-3.5 h-3.5 rounded-full bg-emerald-400 border border-emerald-500/50 shadow-sm" />
               </div>
-              <div className="mx-auto px-4 py-1 rounded bg-gray-100 dark:bg-slate-800 text-xs text-gray-500 dark:text-gray-400 font-mono tracking-wider">
-                app.roomora.co
+              <div className="flex-1 flex justify-center">
+                <div className="flex items-center gap-2 px-6 py-1.5 rounded-full bg-white dark:bg-slate-800 shadow-sm border border-gray-200 dark:border-slate-700 text-xs text-gray-500 dark:text-gray-400 font-medium tracking-wide">
+                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                  app.roomora.co
+                </div>
               </div>
+              <div className="w-16" /> {/* Spacer for symmetry */}
             </div>
             
-            {/* Mock Dashboard Content area */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Mock Dashboard Layout */}
+            <div className="flex h-[450px]">
                {/* Sidebar mock */}
-               <div className="hidden md:flex flex-col gap-3 p-4 bg-gray-50 dark:bg-slate-950 rounded-xl border border-gray-100 dark:border-slate-800">
-                  <div className="h-8 bg-blue-100 dark:bg-blue-900/30 rounded flex items-center px-3 mb-4">
-                     <div className="h-2 w-16 bg-blue-500 rounded-full" />
+               <div className="hidden md:flex flex-col w-64 p-4 bg-slate-50/50 dark:bg-slate-950/50 border-r border-gray-100/50 dark:border-slate-800/50">
+                  <div className="flex items-center gap-3 mb-8 px-2">
+                    <div className="w-8 h-8 rounded bg-gradient-to-br from-blue-600 to-purple-600 shadow-lg text-white flex items-center justify-center font-bold">R</div>
+                    <div className="h-4 w-24 bg-slate-200 dark:bg-slate-700 rounded-md" />
                   </div>
-                  {[1, 2, 3, 4].map(i => (
-                    <div key={i} className="h-6 flex items-center px-3 gap-2 opacity-50">
-                      <div className="w-4 h-4 rounded-sm bg-gray-300 dark:bg-slate-700" />
-                      <div className="h-2 w-20 bg-gray-300 dark:bg-slate-700 rounded-full" />
-                    </div>
-                  ))}
+                  
+                  <div className="space-y-3">
+                    <div className="h-10 bg-white dark:bg-blue-900/40 rounded-xl shadow-sm border border-blue-100 dark:border-blue-800/50 flex items-center px-3" />
+                    {[...Array(5)].map((_, i) => (
+                      <div key={i} className="h-10 rounded-xl hover:bg-slate-200/50 dark:hover:bg-slate-800/50 flex items-center px-3 gap-3 transition-colors">
+                        <div className="w-5 h-5 rounded-md bg-slate-200 dark:bg-slate-700/50" />
+                        <div className={`h-2.5 rounded-full bg-slate-200 dark:bg-slate-700/50 ${i % 2 === 0 ? 'w-24' : 'w-16'}`} />
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="mt-auto h-12 rounded-xl bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900/20 dark:to-purple-900/20 border border-blue-200/50 dark:border-blue-800/30 flex items-center px-4">
+                    <div className="w-2 h-2 rounded-full bg-blue-500 animate-ping mr-2" />
+                    <div className="h-2.5 w-20 bg-blue-300 dark:bg-blue-700/50 rounded-full" />
+                  </div>
                </div>
                
                {/* Main content mock */}
-               <div className="col-span-2 flex flex-col gap-4 p-2 md:p-4">
-                  <div className="flex justify-between items-center mb-2">
+               <div className="flex-1 flex flex-col p-6 overflow-hidden">
+                  {/* Header */}
+                  <div className="flex justify-between items-center mb-8">
                     <div>
-                      <div className="h-5 w-32 bg-gray-800 dark:bg-gray-200 rounded mb-2" />
-                      <div className="h-3 w-48 bg-gray-300 dark:bg-gray-600 rounded" />
+                      <div className="h-6 w-48 bg-slate-800 dark:bg-white rounded-md mb-2 shadow-sm" />
+                      <div className="h-3 w-64 bg-slate-300 dark:bg-slate-600 rounded-full" />
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800 border-2 border-white dark:border-slate-700 shadow-sm" />
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                     {[1, 2, 3, 4].map(i => (
-                       <div key={i} className="aspect-video bg-gray-50 dark:bg-slate-950 rounded-xl border border-gray-100 dark:border-slate-800 p-4 flex flex-col justify-between hover:border-blue-300 transition-colors">
-                          <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/40" />
-                          <div className="h-4 w-1/2 bg-gray-900 dark:bg-gray-100 rounded" />
+                  
+                  {/* KPI Cards */}
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                     {[
+                       { color: 'blue', tr: 'M 0,20 Q 15,5 30,15 T 60,10 T 100,0' },
+                       { color: 'purple', tr: 'M 0,10 Q 20,20 40,5 T 80,15 T 100,5' },
+                       { color: 'green', tr: 'M 0,15 Q 10,0 25,10 T 55,20 T 100,5' },
+                       { color: 'orange', tr: 'M 0,5 Q 20,15 40,10 T 70,20 T 100,10' }
+                     ].map((mock, i) => (
+                       <div key={i} className="relative bg-white dark:bg-slate-950 rounded-2xl border border-gray-100 dark:border-slate-800 p-5 shadow-sm overflow-hidden group">
+                          {/* Value */}
+                          <div className={`w-10 h-10 rounded-xl bg-${mock.color}-50 dark:bg-${mock.color}-900/20 mb-4 flex items-center justify-center`}>
+                             <div className={`w-5 h-5 rounded bg-${mock.color}-500/50`} />
+                          </div>
+                          <div className="h-5 w-24 bg-slate-800 dark:bg-white rounded-md mb-2" />
+                          <div className="h-3 w-16 bg-slate-300 dark:bg-slate-700 rounded-full" />
+                          
+                          {/* Mini sparkline */}
+                          <svg className={`absolute bottom-0 left-0 w-full h-12 text-${mock.color}-500 opacity-20 dark:opacity-30 group-hover:scale-y-110 transition-transform origin-bottom`} viewBox="0 0 100 20" preserveAspectRatio="none">
+                            <path d={mock.tr} fill="none" stroke="currentColor" strokeWidth="2" vectorEffect="non-scaling-stroke"/>
+                          </svg>
                        </div>
                      ))}
                   </div>
-                  <div className="h-48 mt-2 bg-gradient-to-t from-blue-50/50 to-transparent dark:from-slate-800/50 rounded-xl border border-gray-100 dark:border-slate-800 flex items-end p-0 overflow-hidden">
-                     <svg className="w-full h-24 text-blue-500 drop-shadow-md" viewBox="0 0 100 20" preserveAspectRatio="none">
-                       <path d="M0,20 L0,5 L10,8 L20,3 L30,10 L40,4 L50,12 L60,2 L70,8 L80,1 L90,6 L100,0 L100,20 Z" fill="currentColor" fillOpacity="0.2" stroke="currentColor" strokeWidth="1" vectorEffect="non-scaling-stroke"/>
-                     </svg>
-                  </div>
-               </div>
-            </div>
+                  
+                  {/* Large Chart */}
+                  <div className="flex-1 bg-white dark:bg-slate-950 rounded-2xl border border-gray-100 dark:border-slate-800 p-5 shadow-sm flex flex-col relative overflow-hidden">
+                     <div className="flex justify-between items-center mb-4">
+                       <div className="h-4 w-32 bg-slate-800 dark:bg-white rounded-md" />
+                       <div className="flex gap-2">
+                         <div className="h-6 w-16 bg-slate-100 dark:bg-slate-800 rounded-md" />
+                         <div className="h-6 w-16 bg-blue-50 dark:bg-blue-900/30 text-blue-500 rounded-md border border-blue-100 dark:border-blue-800/50" />
+                       </div>
+                     </div>
+                     
+                     {/* Gorgeous Area Chart Mock */}
+                     <div className="flex-1 relative mt-2">
+                       {/* Grid lines */}
+                       <div className="absolute inset-0 flex flex-col justify-between">
+                         {[...Array(4)].map((_, i) => (
+                           <div key={i} className="w-full border-t border-dashed border-gray-200 dark:border-slate-800" />
+                         ))}
+                       </div>
+                       
+                     {/* Animated Wave SVG */}
+                     <div className="absolute inset-0 overflow-hidden">
+                       <motion.svg 
+                         className="absolute top-0 left-0 w-[200%] h-full drop-shadow-2xl" 
+                         viewBox="0 0 200 100" 
+                         preserveAspectRatio="none"
+                         animate={{ x: ["0%", "-50%"] }}
+                         transition={{ repeat: Infinity, duration: 15, ease: "linear" }}
+                       >
+                         <defs>
+                           <linearGradient id="grad1" x1="0%" y1="0%" x2="0%" y2="100%">
+                             <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.5" />
+                             <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.0" />
+                           </linearGradient>
+                           <linearGradient id="grad2" x1="0%" y1="0%" x2="0%" y2="100%">
+                             <stop offset="0%" stopColor="#a855f7" stopOpacity="0.4" />
+                             <stop offset="100%" stopColor="#a855f7" stopOpacity="0.0" />
+                           </linearGradient>
+                         </defs>
+                         
+                         {/* Background purple wave (looping 0 to 200) */}
+                         <path 
+                           d="M 0,80 Q 20,40 40,60 T 70,50 T 100,80 Q 120,40 140,60 T 170,50 T 200,80 L 200,100 L 0,100 Z" 
+                           fill="url(#grad2)" 
+                         />
+                         <path 
+                           d="M 0,80 Q 20,40 40,60 T 70,50 T 100,80 Q 120,40 140,60 T 170,50 T 200,80" 
+                           fill="none" stroke="#a855f7" strokeWidth="2" vectorEffect="non-scaling-stroke"
+                         />
+                         
+                         {/* Foreground blue wave (looping 0 to 200) */}
+                         <path 
+                           d="M 0,90 Q 25,50 50,70 T 80,60 T 100,90 Q 125,50 150,70 T 180,60 T 200,90 L 200,100 L 0,100 Z" 
+                           fill="url(#grad1)" 
+                         />
+                         <path 
+                           d="M 0,90 Q 25,50 50,70 T 80,60 T 100,90 Q 125,50 150,70 T 180,60 T 200,90" 
+                           fill="none" stroke="#3b82f6" strokeWidth="3" vectorEffect="non-scaling-stroke"
+                         />
+                       </motion.svg>
+                     </div>
+                   </div>
+                </div>
+             </div>
+          </div>
           </div>
         </motion.div>
       </main>
 
       {/* Features Section */}
-      <section className="relative z-10 bg-white dark:bg-slate-900 py-24 border-y border-gray-100 dark:border-slate-800 transition-colors duration-300">
+      <section className="relative z-10 bg-white dark:bg-slate-900 py-24 border-y border-gray-100 dark:border-slate-800 transition-colors duration-300 overflow-hidden">
         <div className="container mx-auto px-6">
-          <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-gray-900 dark:text-white mb-4">
-              Everything you need to dominate your market.
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            viewport={{ once: true }}
+            className="text-center max-w-2xl mx-auto mb-16"
+          >
+            <h2 className="text-4xl md:text-5xl font-black tracking-tight text-gray-900 dark:text-white mb-6">
+              Everything you need to <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-500">dominate</span> your market.
             </h2>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-lg text-gray-600 dark:text-gray-400">
               Stop leaving money on the table. Roomora seamlessly manages all aspects of hotel revenue with pure AI automation.
             </p>
-          </div>
+          </motion.div>
 
           <motion.div 
             variants={containerVariants}
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-100px" }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-8"
+            className="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[auto] md:auto-rows-[minmax(250px,_auto)]"
           >
-            <FeatureCard 
-               icon={Sparkles}
-               title="AI Dynamic Pricing"
-               description="Our Gemini AI engine calculates supply, demand, holidays, and live inventory to inject real-time scarcity markups and discounts automatically."
-               delay={0.1}
-            />
-            <FeatureCard 
-               icon={RefreshCw}
-               title="Universal OTA Sync"
-               description="MakeMyTrip, Agoda, Booking.com, Airbnb—we sync them all instantly. Never overbook a room again with secure webhook integrations."
-               delay={0.2}
-            />
-            <FeatureCard 
-               icon={CalendarDays}
-               title="Smart Calendar"
-               description="Visually track the entire month's pricing strategies and booking limits at a glance. Manage walk-ins with simple + and - availability controls."
-               delay={0.3}
-            />
-            <FeatureCard 
-               icon={BarChart3}
-               title="Predictive Analytics"
-               description="Gain historical and future insight on your ADR (Average Daily Rate) and RevPAR with flawless daily, weekly, and monthly visualizations."
-               delay={0.4}
-            />
-            <FeatureCard 
-               icon={ShieldCheck}
-               title="Secure & Reliable"
-               description="Backed by modern enterprise security paradigms so you can safely store data locally or sync to the cloud without worry."
-               delay={0.5}
-            />
-            <div className="p-8 rounded-2xl bg-gradient-to-br from-blue-600 to-purple-600 text-white flex flex-col justify-center overflow-hidden relative">
-               <div className="absolute top-[-50px] right-[-50px] w-32 h-32 bg-white/10 rounded-full blur-2xl" />
-               <h3 className="text-2xl font-bold mb-2">Ready to transform your revenue?</h3>
-               <Link to="/signup" className="mt-6 self-start px-6 py-2 bg-white text-blue-900 font-bold rounded-lg hover:shadow-lg hover:scale-105 transition-all">
-                 Get Started
-               </Link>
-            </div>
+            {/* Box 1 (Large) - AI Pricing */}
+            <motion.div 
+              variants={itemVariants} 
+              whileHover={{ y: -8, scale: 1.01 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              className="md:col-span-2 md:row-span-2 relative group overflow-hidden rounded-[2rem] bg-gradient-to-br from-blue-900 to-slate-900 border border-slate-800 p-8 md:p-12 flex flex-col justify-end min-h-[400px]"
+            >
+              {/* Decorative Glows */}
+              <motion.div animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.5, 0.3] }} transition={{ repeat: Infinity, duration: 4 }} className="absolute top-[-20%] right-[-10%] w-[80%] h-[80%] bg-blue-500/20 rounded-full blur-[100px]"></motion.div>
+              <motion.div animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.4, 0.2] }} transition={{ repeat: Infinity, duration: 5, delay: 1 }} className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-purple-500/20 rounded-full blur-[100px]"></motion.div>
+              
+              <motion.div 
+                animate={{ rotate: [0, 5, -5, 0] }}
+                transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
+                className="bg-white/10 backdrop-blur-md w-16 h-16 rounded-2xl flex items-center justify-center mb-6 shadow-xl border border-white/10 relative z-10"
+              >
+                <Sparkles className="w-8 h-8 text-blue-300" />
+              </motion.div>
+              <h3 className="text-3xl md:text-5xl font-black text-white mb-4 relative z-10 tracking-tight">AI Dynamic Pricing</h3>
+              <p className="text-blue-100/70 text-lg md:text-xl max-w-xl relative z-10 leading-relaxed font-medium">
+                Our Gemini AI engine calculates supply, demand, holidays, and live inventory to inject real-time scarcity markups and discounts <span className="text-white">completely automatically</span>.
+              </p>
+            </motion.div>
+
+            {/* Box 2 - OTA Sync */}
+            <motion.div 
+              variants={itemVariants} 
+              whileHover={{ y: -8 }}
+              className="md:col-span-1 md:row-span-1 relative group overflow-hidden rounded-[2rem] bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 p-8 flex flex-col hover:border-purple-300 dark:hover:border-purple-500/50 hover:shadow-2xl hover:shadow-purple-500/10 transition-colors duration-300"
+            >
+              <div className="bg-purple-100 dark:bg-purple-900/30 w-14 h-14 rounded-2xl flex items-center justify-center mb-6 text-purple-600 dark:text-purple-400 group-hover:rotate-12 transition-transform duration-300">
+                <RefreshCw className="w-7 h-7" />
+              </div>
+              <h3 className="text-2xl font-black tracking-tight text-gray-900 dark:text-white mb-3">Universal OTA Sync</h3>
+              <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+                MakeMyTrip, Agoda, Booking.com, Airbnb—we sync them all instantly. Never double-book a room again.
+              </p>
+            </motion.div>
+
+            {/* Box 3 - Smart Calendar */}
+            <motion.div 
+              variants={itemVariants} 
+              whileHover={{ y: -8 }}
+              className="md:col-span-1 md:row-span-1 relative group overflow-hidden rounded-[2rem] bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 p-8 flex flex-col hover:border-orange-300 dark:hover:border-orange-500/50 hover:shadow-2xl hover:shadow-orange-500/10 transition-colors duration-300"
+            >
+              <div className="bg-orange-100 dark:bg-orange-900/30 w-14 h-14 rounded-2xl flex items-center justify-center mb-6 text-orange-600 dark:text-orange-400 group-hover:-rotate-12 transition-transform duration-300">
+                <CalendarDays className="w-7 h-7" />
+              </div>
+              <h3 className="text-2xl font-black tracking-tight text-gray-900 dark:text-white mb-3">Smart Calendar</h3>
+              <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+                Visually track your entire month's automated strategies and exact booking limits at a glance.
+              </p>
+            </motion.div>
+
+            {/* Box 4 - Predictive Analytics */}
+            <motion.div 
+              variants={itemVariants} 
+              whileHover={{ scale: 1.02 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              className="md:col-span-2 md:row-span-1 relative group overflow-hidden rounded-[2rem] bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 p-8 flex items-center hover:shadow-2xl hover:shadow-green-500/10 transition-colors duration-300 min-h-[250px]"
+            >
+              <div className="absolute right-0 bottom-0 opacity-5 dark:opacity-10 group-hover:opacity-[0.15] dark:group-hover:opacity-30 group-hover:-translate-y-4 group-hover:-translate-x-4 transition-all duration-700">
+                <BarChart3 className="w-64 h-64 text-green-500 translate-x-12 translate-y-16" />
+              </div>
+              <div className="relative z-10 max-w-lg">
+                <div className="bg-green-100 dark:bg-green-900/30 w-14 h-14 rounded-2xl flex items-center justify-center mb-6 text-green-600 dark:text-green-400 group-hover:scale-110 transition-transform duration-500">
+                  <BarChart3 className="w-7 h-7" />
+                </div>
+                <h3 className="text-2xl font-black tracking-tight text-gray-900 dark:text-white mb-3">Predictive Analytics</h3>
+                <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+                  Gain deep historical and predictive insight into your ADR and RevPAR with flawless visual charts and KPIs.
+                </p>
+              </div>
+            </motion.div>
+
+            {/* Box 5 - Secure / Try Now */}
+            <motion.div 
+              variants={itemVariants} 
+              whileHover={{ y: -10 }}
+              className="md:col-span-1 md:row-span-1 relative group overflow-hidden rounded-[2rem] bg-gradient-to-br from-indigo-500 to-purple-600 border border-purple-400 shadow-xl p-8 flex flex-col justify-center items-center text-center hover:shadow-purple-500/40 transition-colors duration-500"
+            >
+                <motion.div animate={{ y: [0, -5, 0] }} transition={{ repeat: Infinity, duration: 3 }}>
+                  <ShieldCheck className="w-12 h-12 mb-4 text-white opacity-90" />
+                </motion.div>
+                <h3 className="text-2xl font-black tracking-tight text-white mb-2">Secure & Reliable</h3>
+                <p className="text-indigo-100 leading-relaxed mb-8 flex-grow">
+                  Backed by enterprise-grade data security paradigms.
+                </p>
+                <Link to="/signup" className="px-8 py-4 bg-white text-indigo-900 font-bold rounded-full hover:scale-105 transition-transform w-full shadow-lg shadow-black/10">
+                  Start Free Trial
+                </Link>
+            </motion.div>
           </motion.div>
         </div>
       </section>
 
+      {/* Contact & Demo CTA Section */}
+      <section className="relative z-10 bg-slate-50 dark:bg-slate-950 py-24 border-t border-gray-100 dark:border-slate-800 transition-colors duration-300">
+        <div className="container mx-auto px-6 max-w-4xl text-center">
+            <motion.div 
+              initial={{ y: 20, opacity: 0 }}
+              whileInView={{ y: 0, opacity: 1 }}
+              viewport={{ once: true }}
+              className="p-10 md:p-14 rounded-3xl bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 shadow-xl"
+            >
+              <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-gray-900 dark:text-white mb-6">
+                Ready to automate your hotel?
+              </h2>
+              <p className="text-lg text-gray-600 dark:text-gray-400 mb-10 max-w-2xl mx-auto">
+                Join leading hotels leveraging Roomora's predictive AI to maximize their occupancy and ADR. Request a live demo today and see the engine in action.
+              </p>
+              <div className="flex flex-col sm:flex-row justify-center gap-4">
+                <a 
+                  href="mailto:business.gaarv@gmail.com?subject=Roomora%20Demo%20Request" 
+                  className="px-8 py-4 rounded-full text-base font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/30 transition-transform active:scale-95 flex items-center justify-center gap-2"
+                >
+                  Request Live Demo
+                </a>
+                <a 
+                  href="mailto:business.gaarv@gmail.com?subject=Roomora%20Sales%20Enquiry" 
+                  className="px-8 py-4 rounded-full text-base font-bold bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-900 dark:text-white shadow-sm hover:bg-gray-100 dark:hover:bg-slate-700 transition-transform active:scale-95 flex items-center justify-center gap-2"
+                >
+                  Contact Sales
+                </a>
+              </div>
+              <p className="mt-8 text-sm text-gray-500 dark:text-gray-400">
+                Or email us directly at <a href="mailto:business.gaarv@gmail.com" className="text-blue-600 dark:text-blue-400 hover:underline">business.gaarv@gmail.com</a>
+              </p>
+            </motion.div>
+        </div>
+      </section>
+
       {/* Footer */}
-      <footer className="bg-slate-50 dark:bg-slate-950 py-12 text-center text-gray-500 dark:text-gray-400 text-sm">
-        <p>© {new Date().getFullYear()} Roomora Software Inc. All rights reserved.</p>
+      <footer className="bg-white dark:bg-slate-900 border-t border-gray-100 dark:border-slate-800 py-12 text-center text-gray-500 dark:text-gray-400 text-sm transition-colors duration-300">
+        <div className="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="flex items-center gap-2 text-lg font-black text-gray-900 dark:text-white">
+            <div className="w-6 h-6 rounded bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-white text-xs">R</div>
+            Roomora.
+          </div>
+          <p>© {new Date().getFullYear()} Roomora Software Inc. All rights reserved.</p>
+          <div className="flex gap-4">
+            <a href="#" className="hover:text-blue-600 dark:hover:text-primary-400 transition">Terms</a>
+            <a href="#" className="hover:text-blue-600 dark:hover:text-primary-400 transition">Privacy</a>
+            <a href="mailto:business.gaarv@gmail.com" className="hover:text-blue-600 dark:hover:text-primary-400 transition">Contact</a>
+          </div>
+        </div>
       </footer>
     </div>
   );
 }
 
-function FeatureCard({ icon: Icon, title, description, delay }) {
-  return (
-    <motion.div 
-      variants={{
-        hidden: { y: 20, opacity: 0 },
-        visible: { y: 0, opacity: 1, transition: { type: 'spring', delay: delay } }
-      }}
-      className="bg-gray-50 dark:bg-slate-950 border border-gray-100 dark:border-slate-800 p-8 rounded-2xl hover:shadow-xl hover:border-blue-100 dark:hover:border-slate-700 transition-all group"
-    >
-      <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-primary-400 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-        <Icon className="w-6 h-6" />
-      </div>
-      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">{title}</h3>
-      <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-sm">
-        {description}
-      </p>
-    </motion.div>
-  );
-}
+
