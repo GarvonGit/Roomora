@@ -79,6 +79,22 @@ export default function Calendar() {
         return parseInt(y) === year && parseInt(m) === month + 1;
       });
 
+      const cacheKey = `gemini_forecast_${year}_${month + 1}`;
+      const cachedStr = localStorage.getItem(cacheKey);
+      
+      if (cachedStr) {
+        const cachedData = JSON.parse(cachedStr);
+        const now = new Date().getTime();
+        // Check if cached less than 24 hours ago (86400000 ms)
+        if (now - cachedData.timestamp < 86400000) {
+            console.log("Using 24h cached forecast!");
+            setMonthForecast(cachedData.forecast);
+            fetchLiveInventory();
+            setIsForecasting(false);
+            return;
+        }
+      }
+
       const token = localStorage.getItem('token') || 'test';
       const res = await fetch('http://localhost:5001/api/pricing/monthly-forecast', {
         method: 'POST',
@@ -91,6 +107,11 @@ export default function Calendar() {
          alert(data.message || data.error || 'Failed to get monthly forecast');
          return;
       }
+      
+      localStorage.setItem(cacheKey, JSON.stringify({
+          forecast: data.forecast,
+          timestamp: new Date().getTime()
+      }));
       
       setMonthForecast(data.forecast);
       fetchLiveInventory(); // Refresh inventory

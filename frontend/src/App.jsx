@@ -10,6 +10,7 @@ import Analytics from './pages/Analytics';
 import Settings from './pages/Settings';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import LandingPage from './pages/LandingPage';
 
 const PrivateRoute = ({ children }) => {
   // const token = localStorage.getItem('token');
@@ -45,17 +46,17 @@ export default function App() {
       <div className={darkMode ? 'dark' : ''}>
         <GlobalLoader />
         <Routes>
+          <Route path="/" element={<LandingPage darkMode={darkMode} setDarkMode={setDarkMode} />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           
-          <Route path="/" element={<PrivateRoute><DashboardLayout darkMode={darkMode} setDarkMode={setDarkMode} /></PrivateRoute>}>
-            <Route index element={<Navigate to="/dashboard" replace />} />
-            <Route path="dashboard" element={<Dashboard />} />
-            <Route path="inventory" element={<Inventory />} />
-            <Route path="bookings" element={<Bookings />} />
-            <Route path="calendar" element={<Calendar />} />
-            <Route path="analytics" element={<Analytics />} />
-            <Route path="settings" element={<Settings />} />
+          <Route element={<PrivateRoute><DashboardLayout darkMode={darkMode} setDarkMode={setDarkMode} /></PrivateRoute>}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/inventory" element={<Inventory />} />
+            <Route path="/bookings" element={<Bookings />} />
+            <Route path="/calendar" element={<Calendar />} />
+            <Route path="/analytics" element={<Analytics />} />
+            <Route path="/settings" element={<Settings />} />
           </Route>
         </Routes>
       </div>
