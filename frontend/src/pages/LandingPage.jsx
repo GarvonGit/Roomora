@@ -77,19 +77,16 @@ export default function LandingPage({ darkMode, setDarkMode }) {
           transition={{ delay: 0.1 }}
           className="text-5xl md:text-7xl font-black tracking-tight text-gray-900 dark:text-white mb-6 max-w-4xl"
         >
-          The intelligent OS for <br/>
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 dark:from-primary-400 dark:to-blue-400">
-            modern hotel revenue.
-          </span>
+          The Intelligent Revenue OS <br className="hidden md:block"/> for <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 dark:from-primary-400 dark:to-blue-400">Indian Hotels</span>
         </motion.h1>
 
         <motion.p 
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="text-lg md:text-xl text-gray-600 dark:text-gray-400 mb-10 max-w-2xl leading-relaxed"
+          className="text-lg md:text-xl text-gray-600 dark:text-gray-400 mb-10 max-w-3xl leading-relaxed"
         >
-          Automate dynamic pricing, seamlessly manage your live inventory, and skyrocket your booking profits with real-time OTA integration and predictive AI intelligence.
+          Stop guessing room rates. Roomora gives hotel owners real-time AI suggestions based on occupancy, demand, Indian festivals (Diwali, Holi, Eid, weddings & more), and live market conditions — so you earn more without extra work.
         </motion.p>
 
         <motion.div 
@@ -99,7 +96,7 @@ export default function LandingPage({ darkMode, setDarkMode }) {
           className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto"
         >
           <Link to="/signup" className="px-8 py-4 rounded-full text-base font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/30 transition-transform active:scale-95 flex items-center justify-center gap-2">
-            Start Free Trial
+            Start Free 30-Day Trial
           </Link>
           <Link to="/dashboard" className="px-8 py-4 rounded-full text-base font-bold bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-900 dark:text-white shadow-sm hover:bg-gray-50 dark:hover:bg-slate-700 transition-transform active:scale-95 flex items-center justify-center gap-2">
             Go to Dashboard <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -272,13 +269,13 @@ export default function LandingPage({ darkMode, setDarkMode }) {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
             viewport={{ once: true }}
-            className="text-center max-w-2xl mx-auto mb-16"
+            className="text-center max-w-3xl mx-auto mb-16"
           >
             <h2 className="text-4xl md:text-5xl font-black tracking-tight text-gray-900 dark:text-white mb-6">
-              Everything you need to <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-500">dominate</span> your market.
+              Everything you need to <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-500">dominate</span> your local market.
             </h2>
             <p className="text-lg text-gray-600 dark:text-gray-400">
-              Stop leaving money on the table. Roomora seamlessly manages all aspects of hotel revenue with pure AI automation.
+              Roomora is built for Indian hoteliers — from boutique properties to mid-size hotels. Centralize bookings, eliminate overbooking, and grow revenue with smart automation.
             </p>
           </motion.div>
 
@@ -307,9 +304,9 @@ export default function LandingPage({ darkMode, setDarkMode }) {
               >
                 <Sparkles className="w-8 h-8 text-blue-300" />
               </motion.div>
-              <h3 className="text-3xl md:text-5xl font-black text-white mb-4 relative z-10 tracking-tight">AI Dynamic Pricing</h3>
+              <h3 className="text-3xl md:text-5xl font-black text-white mb-4 relative z-10 tracking-tight">AI-Powered Dynamic Pricing</h3>
               <p className="text-blue-100/70 text-lg md:text-xl max-w-xl relative z-10 leading-relaxed font-medium">
-                Our Gemini AI engine calculates supply, demand, holidays, and live inventory to inject real-time scarcity markups and discounts <span className="text-white">completely automatically</span>.
+                Our built-in AI analyzes occupancy, upcoming occasions, historical data, and demand patterns to recommend optimal prices and multipliers automatically. Get profitable suggestions you can apply in one click.
               </p>
             </motion.div>
 
@@ -322,9 +319,9 @@ export default function LandingPage({ darkMode, setDarkMode }) {
               <div className="bg-purple-100 dark:bg-purple-900/30 w-14 h-14 rounded-2xl flex items-center justify-center mb-6 text-purple-600 dark:text-purple-400 group-hover:rotate-12 transition-transform duration-300">
                 <RefreshCw className="w-7 h-7" />
               </div>
-              <h3 className="text-2xl font-black tracking-tight text-gray-900 dark:text-white mb-3">Universal OTA Sync</h3>
+              <h3 className="text-2xl font-black tracking-tight text-gray-900 dark:text-white mb-3">Seamless OTA Sync</h3>
               <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                MakeMyTrip, Agoda, Booking.com, Airbnb—we sync them all instantly. Never double-book a room again.
+                Instant two-way updates with MakeMyTrip, Goibibo, Booking.com, Agoda, and more. Never double-book again. Push prices and inventory across all channels simultaneously.
               </p>
             </motion.div>
 
@@ -337,9 +334,9 @@ export default function LandingPage({ darkMode, setDarkMode }) {
               <div className="bg-orange-100 dark:bg-orange-900/30 w-14 h-14 rounded-2xl flex items-center justify-center mb-6 text-orange-600 dark:text-orange-400 group-hover:-rotate-12 transition-transform duration-300">
                 <CalendarDays className="w-7 h-7" />
               </div>
-              <h3 className="text-2xl font-black tracking-tight text-gray-900 dark:text-white mb-3">Smart Calendar</h3>
+              <h3 className="text-2xl font-black tracking-tight text-gray-900 dark:text-white mb-3">Smart Visual Calendar</h3>
               <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                Visually track your entire month's automated strategies and exact booking limits at a glance.
+                See your entire month at a glance — automated pricing strategies, booking limits, occupancy forecasts, and holiday impacts.
               </p>
             </motion.div>
 
@@ -357,9 +354,9 @@ export default function LandingPage({ darkMode, setDarkMode }) {
                 <div className="bg-green-100 dark:bg-green-900/30 w-14 h-14 rounded-2xl flex items-center justify-center mb-6 text-green-600 dark:text-green-400 group-hover:scale-110 transition-transform duration-500">
                   <BarChart3 className="w-7 h-7" />
                 </div>
-                <h3 className="text-2xl font-black tracking-tight text-gray-900 dark:text-white mb-3">Predictive Analytics</h3>
+                <h3 className="text-2xl font-black tracking-tight text-gray-900 dark:text-white mb-3">Actionable Analytics</h3>
                 <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                  Gain deep historical and predictive insight into your ADR and RevPAR with flawless visual charts and KPIs.
+                  Track ADR, RevPAR, occupancy trends, and revenue KPIs with clear charts. Know exactly what's working and where to improve.
                 </p>
               </div>
             </motion.div>
@@ -373,9 +370,9 @@ export default function LandingPage({ darkMode, setDarkMode }) {
                 <motion.div animate={{ y: [0, -5, 0] }} transition={{ repeat: Infinity, duration: 3 }}>
                   <ShieldCheck className="w-12 h-12 mb-4 text-white opacity-90" />
                 </motion.div>
-                <h3 className="text-2xl font-black tracking-tight text-white mb-2">Secure & Reliable</h3>
-                <p className="text-indigo-100 leading-relaxed mb-8 flex-grow">
-                  Backed by enterprise-grade data security paradigms.
+                <h3 className="text-2xl font-black tracking-tight text-white mb-2">Enterprise-Grade Security</h3>
+                <p className="text-indigo-100 leading-relaxed mb-8 flex-grow text-sm">
+                  Multi-tenant isolation, audit logs, and secure data handling so your hotel information stays private and protected.
                 </p>
                 <Link to="/signup" className="px-8 py-4 bg-white text-indigo-900 font-bold rounded-full hover:scale-105 transition-transform w-full shadow-lg shadow-black/10">
                   Start Free Trial
@@ -395,17 +392,17 @@ export default function LandingPage({ darkMode, setDarkMode }) {
               className="p-10 md:p-14 rounded-3xl bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 shadow-xl"
             >
               <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-gray-900 dark:text-white mb-6">
-                Ready to automate your hotel?
+                Ready to increase your occupancy and ADR?
               </h2>
               <p className="text-lg text-gray-600 dark:text-gray-400 mb-10 max-w-2xl mx-auto">
-                Join leading hotels leveraging Roomora's predictive AI to maximize their occupancy and ADR. Request a live demo today and see the engine in action.
+                Join hundreds of smart hotel owners who are using Roomora to run more profitable properties with less daily effort.
               </p>
               <div className="flex flex-col sm:flex-row justify-center gap-4">
                 <a 
                   href="mailto:business.gaarv@gmail.com?subject=Roomora%20Demo%20Request" 
                   className="px-8 py-4 rounded-full text-base font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/30 transition-transform active:scale-95 flex items-center justify-center gap-2"
                 >
-                  Request Live Demo
+                  Request a Live Demo
                 </a>
                 <a 
                   href="mailto:business.gaarv@gmail.com?subject=Roomora%20Sales%20Enquiry" 
@@ -428,11 +425,10 @@ export default function LandingPage({ darkMode, setDarkMode }) {
             <div className="w-6 h-6 rounded bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-white text-xs">R</div>
             Roomora.
           </div>
-          <p>© {new Date().getFullYear()} Roomora Software Inc. All rights reserved.</p>
+          <p>© 2026 Roomora Software. All rights reserved.</p>
           <div className="flex gap-4">
             <a href="#" className="hover:text-blue-600 dark:hover:text-primary-400 transition">Terms</a>
             <a href="#" className="hover:text-blue-600 dark:hover:text-primary-400 transition">Privacy</a>
-            <a href="mailto:business.gaarv@gmail.com" className="hover:text-blue-600 dark:hover:text-primary-400 transition">Contact</a>
           </div>
         </div>
       </footer>
