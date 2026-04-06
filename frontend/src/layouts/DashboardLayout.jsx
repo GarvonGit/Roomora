@@ -114,12 +114,12 @@ export default function DashboardLayout({ darkMode, setDarkMode }) {
         {/* Sidebar */}
         <aside className="w-64 bg-white dark:bg-dark-800 border-r border-gray-200 dark:border-dark-700 flex flex-col transition-colors z-20">
         <div className="h-16 flex items-center px-6 border-b border-gray-200 dark:border-dark-700">
-          <div className="text-2xl font-black tracking-tighter text-blue-900 dark:text-white flex items-center gap-2">
+          <NavLink to="/" className="text-2xl font-black tracking-tighter text-blue-900 dark:text-white flex items-center gap-2 hover:opacity-80 transition-opacity">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 shadow-lg shadow-blue-500/30 flex items-center justify-center">
                <span className="text-white text-lg leading-none">R</span>
             </div>
             Roomora<span className="text-blue-600 dark:text-primary-500">.</span>
-          </div>
+          </NavLink>
         </div>
 
         <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
