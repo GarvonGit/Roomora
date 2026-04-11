@@ -86,7 +86,13 @@ const transporter = nodemailer.createTransport({
 
 
 
-// Mock Database Arrays
+// --- PERSISTENCE LAYER (Live Supabase + Mock Fallback) ---
+const realPool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false }
+});
+
+// Mock Database Arrays (Stored in-memory for immediate test access)
 let users = [
     { 
         id: 101, 
@@ -102,16 +108,26 @@ let hotels = [
     { id: 201, user_id: 101, hotel_name: 'The Grand Roomora (Demo)', base_currency: 'INR' }
 ];
 
-// Configure a COMPLETE MOCK of PostgreSQL Pool to bypass paused Supabase ENOTFOUND errors
+// Hybrid Proxy: Prioritize Supabase, Fallback to Mock for the test account
 const pool = {
   query: async (text, params) => {
     const q = typeof text === 'string' ? text.toLowerCase() : text.text.toLowerCase();
     
-    // Auth / User Checks
-    if (q.includes('from users where username =')) {
-        const u = users.find(u => u.username === params[0]);
-        return { rows: u ? [u] : [] };
+    // 1. Try Live Supabase first for real users
+    try {
+        const result = await realPool.query(text, params);
+        if (result.rows.length > 0 || q.includes('insert') || q.includes('update')) {
+            return result;
+        }
+    } catch (dbErr) {
+        // If Supabase is down or paused, we fall through to mock logic
+        if (!q.includes('select 1')) {
+            console.log(`[DB Notice] Supabase restricted or paused. Using in-memory fallback for ${q.substring(0, 30)}...`);
+        }
     }
+
+    // 2. Mock Interceptor (For the admin@roomora.com test account and demo data)
+    // Auth / User Checks
     if (q.includes('from users where email =')) {
         const u = users.find(u => u.email.toLowerCase() === params[0].toLowerCase());
         return { rows: u ? [u] : [] };
@@ -135,12 +151,6 @@ const pool = {
     if (q.includes('from hotels where user_id =')) {
         const h = hotels.find(h => h.user_id === params[0]);
         return { rows: h ? [h] : [] };
-    }
-    if (q.includes('insert into hotels')) {
-        const newId = hotels.length + 201;
-        const newHotel = { id: newId, user_id: params[0], hotel_name: params[1], base_currency: 'INR' };
-        hotels.push(newHotel);
-        return { rows: [newId] };
     }
     
     // Dashboard Analytics: Overview
@@ -166,7 +176,7 @@ const pool = {
         ]};
     }
     
-    // Mock Inventory (4 Room Types as requested)
+    // Mock Inventory
     if (q.includes('from rooms')) {
         return { rows: dbRooms.map(r => ({ ...r, available: r.total_count })) };
     }
@@ -174,10 +184,14 @@ const pool = {
     return { rows: [] };
   },
   connect: async () => {
-     return {
-         query: async (t, p) => pool.query(t, p),
-         release: () => {}
-     };
+    try {
+        return await realPool.connect();
+    } catch (e) {
+        return {
+            query: async (t, p) => pool.query(t, p),
+            release: () => {}
+        };
+    }
   }
 };
 
