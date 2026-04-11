@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { RefreshCw, Edit, X } from 'lucide-react';
+import { RefreshCw, Edit, X, Plus } from 'lucide-react';
 import api from '../utils/api';
 
 export default function Inventory() {
@@ -21,6 +21,11 @@ export default function Inventory() {
   const [logs, setLogs] = useState([]);
   const [isAILoading, setIsAILoading] = useState(false);
   const [aiSuggestionStr, setAiSuggestionStr] = useState('');
+
+  // Create Room State
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [newRoomData, setNewRoomData] = useState({ type: '', basePrice: '', totalCount: '' });
+  const [createStatus, setCreateStatus] = useState({ loading: false, error: false });
 
   useEffect(() => {
     fetchInventory();
@@ -44,6 +49,20 @@ export default function Inventory() {
       console.error(err);
     }
     setIsSyncing(false);
+  };
+
+  const handleCreateRoom = async (e) => {
+    e.preventDefault();
+    setCreateStatus({ loading: true, error: false });
+    try {
+      await api.post('/inventory/rooms', newRoomData);
+      setCreateStatus({ loading: false, error: false });
+      setIsCreateModalOpen(false);
+      setNewRoomData({ type: '', basePrice: '', totalCount: '' });
+      fetchInventory();
+    } catch(err) {
+      setCreateStatus({ loading: false, error: true });
+    }
   };
 
   const openEditModal = (room) => {
@@ -158,7 +177,13 @@ export default function Inventory() {
           <h2 className="text-xl font-semibold mb-1">Master Inventory & Channel Sync</h2>
           <p className="text-gray-500 text-sm">Manage room availability and dynamic pricing across all platforms</p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <button 
+            onClick={() => setIsCreateModalOpen(true)}
+            className="btn-secondary flex items-center gap-2 border dark:border-dark-700"
+          >
+            <Plus className="w-4 h-4" /> Add Room Type
+          </button>
           <input 
             type="date" 
             value={selectedDate}
@@ -329,6 +354,72 @@ export default function Inventory() {
                 <button type="button" onClick={() => setEditingRoom(null)} className="btn-secondary">Cancel</button>
                 <button type="submit" disabled={updateStatus.loading} className="btn-primary">
                   {updateStatus.loading ? 'Updating...' : 'Update Prices'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Create Room Modal */}
+      {isCreateModalOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-dark-900 rounded-xl w-full max-w-sm shadow-xl overflow-hidden">
+            <div className="flex justify-between items-center p-4 border-b border-gray-100 dark:border-dark-700">
+              <h3 className="font-semibold text-lg">Create New Room Type</h3>
+              <button onClick={() => setIsCreateModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <form onSubmit={handleCreateRoom} className="p-5 space-y-4">
+              <div>
+                <label className="text-sm font-medium mb-1 block">Room Name / Type</label>
+                <input 
+                  type="text" 
+                  required 
+                  value={newRoomData.type}
+                  onChange={(e) => setNewRoomData({...newRoomData, type: e.target.value})}
+                  className="input-field w-full"
+                  placeholder="e.g. Luxury Suite"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Base Price (₹)</label>
+                  <input 
+                    type="number" 
+                    required 
+                    min="1"
+                    value={newRoomData.basePrice}
+                    onChange={(e) => setNewRoomData({...newRoomData, basePrice: e.target.value})}
+                    className="input-field w-full"
+                    placeholder="e.g. 3500"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Total Quantity</label>
+                  <input 
+                    type="number" 
+                    required 
+                    min="1"
+                    value={newRoomData.totalCount}
+                    onChange={(e) => setNewRoomData({...newRoomData, totalCount: e.target.value})}
+                    className="input-field w-full"
+                    placeholder="e.g. 5"
+                  />
+                </div>
+              </div>
+
+              {createStatus.error && (
+                <div className="p-2 rounded bg-red-50 text-red-600 text-sm">Failed to create room.</div>
+              )}
+
+              <div className="pt-4 flex justify-end gap-3">
+                <button type="button" onClick={() => setIsCreateModalOpen(false)} className="btn-secondary">Cancel</button>
+                <button type="submit" disabled={createStatus.loading} className="btn-primary flex items-center justify-center">
+                  {createStatus.loading ? 'Creating...' : 'Create Room'}
                 </button>
               </div>
             </form>

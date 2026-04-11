@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const Razorpay = require('razorpay');
 const nodemailer = require('nodemailer');
 const { Pool } = require('pg');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // Load env vars
 dotenv.config();
@@ -31,13 +32,73 @@ const transporter = nodemailer.createTransport({
 
 // In-Memory Live Inventory System (Mocking DB)
 const dbRooms = [
-    { id: 1, type: 'Standard Room', total_count: 15, base_price: 1500 },
-    { id: 2, type: 'Deluxe Room', total_count: 10, base_price: 2500 },
-    { id: 3, type: 'Executive Suite', total_count: 5, base_price: 4500 },
-    { id: 4, type: 'Presidential Suite', total_count: 2, base_price: 8000 }
+    { id: 1, type: 'Normal', total_count: 10, base_price: 1500 },
+    { id: 2, type: 'Executive', total_count: 7, base_price: 2000 }
 ];
 
 let dateWiseInventory = {}; // Maps 'YYYY-MM-DD' => { roomId: availableCount }
+
+function generateMockBookings() {
+  const bookings = [];
+  const today = new Date();
+
+  const specialDates = {
+    [`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-14`]: 1.4,
+    [`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-18`]: 1.5,
+    "2026-04-14": 1.4,
+    "2026-04-18": 1.5
+  };
+
+  let idCounter = 1;
+
+  for (let i = -30; i <= 30; i++) {
+    const currentDate = new Date(today);
+    currentDate.setDate(today.getDate() + i);
+
+    const dateStr = currentDate.toISOString().split("T")[0];
+
+    dbRooms.forEach(room => {
+      let occupancyRate;
+
+      if (i < 0) {
+        occupancyRate = Math.random() * 0.9;
+      } else {
+        occupancyRate = [0.3, 0.5, 0.7, 0.9][Math.floor(Math.random() * 4)];
+      }
+
+      const roomsSold = Math.floor(room.total_count * occupancyRate);
+
+      for (let j = 0; j < roomsSold; j++) {
+        let priceMultiplier = 1;
+
+        if (occupancyRate > 0.8) priceMultiplier = 1.3;
+        else if (occupancyRate > 0.6) priceMultiplier = 1.15;
+        else if (occupancyRate < 0.4) priceMultiplier = 0.85;
+
+        if (specialDates[dateStr]) {
+          priceMultiplier *= specialDates[dateStr];
+        }
+
+        bookings.push({
+          id: idCounter++,
+          guest_name: 'Mocked Guest ' + j,
+          room_type: room.type,
+          check_in: currentDate,
+          check_out: new Date(currentDate.getTime() + (86400000 * 1)),
+          ota_source: 'MakeMyTrip',
+          platform_name: 'MakeMyTrip',
+          price: Math.floor(room.base_price * priceMultiplier),
+          status: 'confirmed',
+          created_at: currentDate
+        });
+      }
+    });
+  }
+
+  return bookings;
+}
+
+let GLOBAL_MOCK_BOOKINGS = generateMockBookings();
 
 // Configure a COMPLETE MOCK of PostgreSQL Pool to bypass paused Supabase ENOTFOUND errors
 const pool = {
@@ -61,55 +122,7 @@ const pool = {
     
     // Mock Dashboard Analytics: Bookings
     if (q.includes('FROM bookings')) {
-        const mockBookings = [];
-        let idCounter = 1;
-        const platforms = ['Booking.com', 'Airbnb', 'Agoda', 'MakeMyTrip'];
-        const rooms = [
-            { type: 'Standard Room', price: 1500 },
-            { type: 'Deluxe Room', price: 2500 },
-            { type: 'Executive Suite', price: 4500 },
-            { type: 'Presidential Suite', price: 8000 }
-        ];
-        
-        // Generate daily data up to April 15th
-        for (let day = 1; day <= 15; day++) {
-            // Random demand variations
-            let bookingsToday = Math.floor(Math.random() * 4) + 2; 
-            if (day === 5 || day === 6 || day === 12 || day === 13) bookingsToday += 5; // Weekend spikes
-            
-            for (let i = 0; i < bookingsToday; i++) {
-                const plat = platforms[Math.floor(Math.random() * platforms.length)];
-                const room = rooms[Math.floor(Math.random() * rooms.length)];
-                // Random multi-night stays and dynamic pricing variations
-                const nights = Math.floor(Math.random() * 3) + 1;
-                const finalPrice = Math.floor((room.price * nights) * (1 + (Math.random() * 0.3))); 
-                
-                const createdDate = new Date(`2026-04-${String(day).padStart(2, '0')}T10:00:00Z`);
-                
-                mockBookings.push({
-                    id: idCounter++,
-                    guest_name: 'Mocked Guest',
-                    room_type: room.type,
-                    check_in: createdDate,
-                    check_out: new Date(createdDate.getTime() + (86400000 * nights)),
-                    ota_source: plat,
-                    platform_name: plat,
-                    price: finalPrice,
-                    status: 'confirmed',
-                    created_at: createdDate
-                });
-            }
-        }
-
-        // Add pure historical monthly volume for Jan - March
-        for (let m = 1; m <= 3; m++) {
-            const historicalDate = new Date(`2026-0${m}-15T10:00:00Z`);
-            mockBookings.push({ id: idCounter++, guest_name: 'Bulk', room_type: 'Standard Room', created_at: historicalDate, price: 120000 + (Math.random()*40000), platform_name: 'MakeMyTrip' });
-            mockBookings.push({ id: idCounter++, guest_name: 'Bulk', room_type: 'Deluxe Room', created_at: historicalDate, price: 180000 + (Math.random()*60000), platform_name: 'Booking.com' });
-            mockBookings.push({ id: idCounter++, guest_name: 'Bulk', room_type: 'Executive Suite', created_at: historicalDate, price: 90000 + (Math.random()*20000), platform_name: 'Agoda' });
-        }
-
-        return { rows: mockBookings };
+        return { rows: GLOBAL_MOCK_BOOKINGS };
     }
     
     if (q.includes('count(*) FROM ota_integrations')) {
@@ -410,17 +423,218 @@ app.get('/api/dashboard/analytics', authenticateToken, async (req, res) => {
 // --- Inventory ---
 app.get('/api/inventory', authenticateToken, async (req, res) => {
     try {
-        const invRes = await pool.query(`SELECT id, room_type as type, inventory_count as total_count, inventory_count as available, price as base_price FROM rooms WHERE hotel_id = $1`, [req.user.hotel_id]);
-        res.json(invRes.rows);
+        // Mock query interceptor returns dbRooms anyway, but let's just bypass and return dbRooms directly for sanity
+        res.json(dbRooms.map(r => ({ ...r, available: r.total_count })));
     } catch(err) {
         console.error('Inventory Fetch Error:', err);
         res.status(500).json({ message: 'Error fetching inventory' });
     }
 });
 
+app.post('/api/inventory/rooms', authenticateToken, (req, res) => {
+    const { type, basePrice, totalCount } = req.body;
+    try {
+        const newId = dbRooms.length > 0 ? Math.max(...dbRooms.map(r => r.id)) + 1 : 1;
+        dbRooms.push({
+            id: newId,
+            type,
+            total_count: Number(totalCount),
+            base_price: Number(basePrice)
+        });
+        
+        // Regenerate the bookings so the new room participates in mock data seamlessly
+        GLOBAL_MOCK_BOOKINGS = generateMockBookings();
+        
+        res.json({ success: true, message: 'Room created successfully' });
+    } catch(err) {
+         res.status(500).json({ error: err.message });
+    }
+});
+
 app.post('/api/inventory/sync-all', authenticateToken, async (req, res) => {
     await new Promise(r => setTimeout(r, 1500));
     res.json({ success: true, message: 'Successfully synced all channels for this user' });
+});
+
+// --- Revenue Intelligence ---
+app.get('/api/revenue/month-summary', authenticateToken, async (req, res) => {
+    const { month } = req.query; // YYYY-MM
+    try {
+        const bookRes = await pool.query(`SELECT * FROM bookings WHERE hotel_id = $1`, [req.user.hotel_id]);
+        
+        let monthBookings = bookRes.rows;
+        if (month) {
+             monthBookings = monthBookings.filter(b => {
+                 const d = b.check_in ? new Date(b.check_in) : new Date(b.created_at);
+                 const bMonth = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+                 return bMonth === month;
+             });
+        }
+
+        const summary = {};
+        
+        monthBookings.forEach(b => {
+             const dStr = b.check_in ? new Date(b.check_in).toISOString().split('T')[0] : new Date(b.created_at).toISOString().split('T')[0];
+             if(!summary[dStr]) {
+                summary[dStr] = { roomsStats: {} };
+                dbRooms.forEach(r => summary[dStr].roomsStats[r.type] = { sold: 0, revenue: 0, basePrice: r.base_price });
+             }
+             if(summary[dStr].roomsStats[b.room_type]) {
+                 summary[dStr].roomsStats[b.room_type].sold += 1;
+                 summary[dStr].roomsStats[b.room_type].revenue += Number(b.price);
+             }
+        });
+
+        const result = Object.keys(summary).map(date => {
+             let totalRevenue = 0;
+             let totalProfit = 0;
+             
+             Object.values(summary[date].roomsStats).forEach(r => {
+                  totalRevenue += r.revenue;
+                  if (r.sold > 0) {
+                      const avgPrice = Math.floor(r.revenue / r.sold);
+                      const profitPerRoom = avgPrice - r.basePrice;
+                      totalProfit += profitPerRoom * r.sold;
+                  }
+             });
+
+             return { date, totalRevenue, totalProfit };
+        });
+
+        res.json({ days: result });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.get('/api/revenue/day-summary', authenticateToken, async (req, res) => {
+    const { date } = req.query; // YYYY-MM-DD
+    try {
+        const bookRes = await pool.query(`SELECT * FROM bookings WHERE hotel_id = $1`, [req.user.hotel_id]);
+        const dayBookings = bookRes.rows.filter(b => {
+             const dStr = b.check_in ? new Date(b.check_in).toISOString().split('T')[0] : new Date(b.created_at).toISOString().split('T')[0];
+             return dStr === date;
+        });
+
+        let totalR = 0;
+        let totalP = 0;
+        const roomMap = {};
+
+        dbRooms.forEach(r => {
+             roomMap[r.type] = {
+                 type: r.type,
+                 totalRooms: r.total_count,
+                 sold: 0,
+                 revenue: 0,
+                 basePrice: r.base_price
+             };
+        });
+
+        dayBookings.forEach(b => {
+            if (roomMap[b.room_type]) {
+                roomMap[b.room_type].sold += 1;
+                roomMap[b.room_type].revenue += Number(b.price);
+            }
+        });
+
+        const rooms = Object.values(roomMap).map(r => {
+             const avgPrice = r.sold > 0 ? Math.floor(r.revenue / r.sold) : 0;
+             const profitPerRoom = r.sold > 0 ? (avgPrice - r.basePrice) : 0;
+             const totalRoomProfit = profitPerRoom * r.sold;
+             
+             totalR += r.revenue;
+             totalP += totalRoomProfit;
+
+             return {
+                 type: r.type,
+                 totalRooms: r.totalRooms,
+                 sold: r.sold,
+                 avgPrice,
+                 basePrice: r.basePrice,
+                 profit: totalRoomProfit
+             };
+        });
+
+        res.json({ date, totalRevenue: totalR, totalProfit: totalP, rooms });
+    } catch(e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// --- AI Pricing System ---
+app.post('/api/pricing/ai-forecast', authenticateToken, async (req, res) => {
+    const { dataPayload } = req.body;
+    try {
+        const apiKey = process.env.GEMINI_API_KEY || 'mock-key';
+        
+        if (apiKey && apiKey !== 'mock-key') {
+            const genAI = new GoogleGenerativeAI(apiKey);
+            const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash', generationConfig: { responseMimeType: "application/json" } });
+            
+            const prompt = `You are an AI revenue manager for a hotel.
+Your goal is to maximize profit using dynamic pricing.
+
+Base Prices:
+* Normal Room: ₹1500
+* Executive Suite: ₹2000
+
+Input:
+${JSON.stringify(dataPayload)}
+
+Rules:
+1. If occupancy < 50% → decrease price (-10% to -25%)
+2. If occupancy 50–80% → increase slightly (+5% to +15%)
+3. If occupancy > 80% → increase aggressively (+20% to +40%)
+4. If fully booked → recommend higher pricing
+5. If holiday/event → increase pricing
+6. If many unsold rooms close to date → reduce price
+
+Return JSON:
+{
+  "dates": [
+    {
+      "date": "YYYY-MM-DD",
+      "recommendations": [
+        {
+          "roomType": "Normal",
+          "priceChangePercent": -15,
+          "reason": "Low occupancy"
+        }
+      ],
+      "overallStrategy": "Reduce prices to increase bookings"
+    }
+  ]
+}`;
+            const result = await model.generateContent(prompt);
+            const response = await result.response;
+            return res.json(JSON.parse(response.text()));
+        } else {
+            // Mock dynamic generation if API key is not present
+            return res.json({
+                dates: dataPayload.map(d => ({
+                    date: d.date,
+                    recommendations: d.rooms.map(r => {
+                        const occ = r.booked / r.totalRooms;
+                        let change = 0;
+                        let reason = "";
+                        if (occ < 0.5) { change = -15; reason = "Low occupancy predicted."; }
+                        else if (occ < 0.8) { change = 10; reason = "Steady demand."; }
+                        else { change = 25; reason = "High demand expected."; }
+                        if (d.isWeekend || d.isHoliday) { change += 10; }
+                        return {
+                            roomType: r.type,
+                            priceChangePercent: change,
+                            reason
+                        };
+                    }),
+                    overallStrategy: "Local Mock: Apply standard occupancy curves."
+                 }))
+            });
+        }
+    } catch(e) {
+        console.error("AI Error:", e);
+        res.status(500).json({ error: e.message });
+    }
 });
 
 // Scope Selective Price Update Tracking
