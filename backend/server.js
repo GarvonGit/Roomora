@@ -113,7 +113,7 @@ const pool = {
         return { rows: u ? [u] : [] };
     }
     if (q.includes('from users where email =')) {
-        const u = users.find(u => u.email === params[0]);
+        const u = users.find(u => u.email.toLowerCase() === params[0].toLowerCase());
         return { rows: u ? [u] : [] };
     }
     if (q.includes('from users where id =')) {
