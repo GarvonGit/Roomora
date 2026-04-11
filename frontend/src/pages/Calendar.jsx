@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Zap, TrendingUp, Plus, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Zap, TrendingUp, Plus, X, Sparkles } from 'lucide-react';
 import api from '../utils/api';
 
 const initialIndianHolidays = [
@@ -78,19 +78,6 @@ export default function Calendar() {
         return parseInt(y) === year && parseInt(m) === month + 1;
       });
 
-      const cacheKey = `gemini_forecast_${year}_${month + 1}`;
-      const cachedStr = localStorage.getItem(cacheKey);
-      
-      if (cachedStr) {
-        const cachedData = JSON.parse(cachedStr);
-        const now = new Date().getTime();
-        // Check if cached less than 24 hours ago (86400000 ms)
-      setMonthForecast(cachedData.forecast);
-      fetchLiveInventory();
-      setIsForecasting(false);
-      return;
-    }
-
     // Mock pure offline fallback for month to avoid spamming the AI API 30 times
     await new Promise(resolve => setTimeout(resolve, 1000));
     
@@ -111,11 +98,6 @@ export default function Calendar() {
              nextForecast[day] = { multiplier: 0.9, insight: "Weekday occupancy typically lower, standard discount." };
         }
     }
-
-    localStorage.setItem(cacheKey, JSON.stringify({
-        forecast: nextForecast,
-        timestamp: new Date().getTime()
-    }));
     
     setMonthForecast(nextForecast);
     fetchLiveInventory();
@@ -132,41 +114,18 @@ export default function Calendar() {
   const handleAddEvent = async (e) => {
     e.preventDefault();
     if(newEventDate && newEventName) {
-       setIsAnalyzing(true);
-       try {
-         const res = await api.post('/pricing/suggest-ai', {
-             base_price: 1500,
-             occupancy: Math.floor(Math.random() * 40) + 60, // Dummy high occupancy for event
-             occasions: [newEventName],
-             historical_summary: "New custom event added by user on calendar.",
-             demand_matrix: {}
-         });
-         const data = res.data;
-         
-         if (!data || data.error) {
-            // Local fallback if Ollama isn't running
-            data.multiplier = 1.35;
-            data.reasoning = data.fallback || 'Local AI unavailable. Standard event markup applied.';
-         }
-
          setCustomEvents([...customEvents, { 
            id: `custom-${Date.now()}`, 
            date: newEventDate, 
            name: newEventName, 
-           type: 'ai_processed',
-           aiMultiplier: data.multiplier || 1.15,
-           aiInsight: data.reasoning || data.fallback || 'Custom event registered.'
+           type: 'manual_processed',
+           aiMultiplier: 1.35,
+           aiInsight: 'Standard event markup applied.'
          }]);
          
          setIsModalOpen(false);
          setNewEventDate('');
          setNewEventName('');
-       } catch (err) {
-         console.error('Error fetching API data', err);
-         alert('Network error connecting to pricing engine.');
-       } finally {
-         setIsAnalyzing(false);
-       }
     }
   };
 
@@ -465,6 +424,7 @@ export default function Calendar() {
           </div>
         </div>
       )}
+
     </div>
   );
 }

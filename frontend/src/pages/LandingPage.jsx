@@ -68,7 +68,7 @@ export default function LandingPage({ darkMode, setDarkMode }) {
           className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100/50 dark:bg-primary-900/30 border border-blue-200 dark:border-primary-800/50 text-blue-800 dark:text-primary-300 font-medium text-sm mb-8 backdrop-blur-sm"
         >
           <Sparkles className="w-4 h-4 text-orange-500 animate-pulse" />
-          Powered by Local Ollama AI · Free &amp; Private
+          Powered by Gemini 3.1 Flash Lite · Fast & Accurate
         </motion.div>
 
         <motion.h1

@@ -12,7 +12,8 @@ import {
   LogOut,
   Bell,
   User,
-  AlertTriangle
+  AlertTriangle,
+  Sparkles
 } from 'lucide-react';
 import clsx from 'clsx';
 

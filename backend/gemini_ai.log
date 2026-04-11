@@ -1,0 +1,31 @@
+[2026-04-11T07:48:39.851Z] --- NEW AI REQUEST ---
+Prompt:
+You are Roomora AI Pricing Expert for Indian hotels.
+Analyze the hotel data and suggest the best room price + multiplier.
+Prioritize: high occupancy, major Indian occasions (Diwali, Holi, Eid, Christmas, weddings, local festivals), competitor demand, and historical patterns.
+Be conservative but profitable. Return ONLY valid JSON. No explanations outside JSON.
+
+Data Context:
+- Base Price: 1500
+- Current Occupancy: 65%
+- Upcoming Occasions: ["CSk vs rcb narendra modi stadium "]
+- Historical Summary: New custom event added by user on calendar.
+- Demand Matrix: {}
+
+Return JSON EXACTLY like this:
+{
+  "suggested_price": number,
+  "multiplier": number,
+  "reasoning": "short 1-2 sentence explanation in simple English",
+  "confidence": number,
+  "occasion_impact": "e.g. Diwali surge +45%"
+}
+[2026-04-11T07:48:45.634Z] SUCCESS Response from AI:
+{
+  "suggested_price": 2550,
+  "multiplier": 1.7,
+  "reasoning": "The highly anticipated CSK vs RCB cricket match at Narendra Modi Stadium is a major event, creating high demand and justifying a significant price increase. This multiplier capitalizes on the occasion while remaining profitable and conservative.",
+  "confidence": 90,
+  "occasion_impact": "Cricket Match surge +70%"
+}
+[2026-04-11T07:48:45.634Z] Parsed JSON result: {"suggested_price":2550,"multiplier":1.7,"reasoning":"The highly anticipated CSK vs RCB cricket match at Narendra Modi Stadium is a major event, creating high demand and justifying a significant price increase. This multiplier capitalizes on the occasion while remaining profitable and conservative.","confidence":90,"occasion_impact":"Cricket Match surge +70%"}

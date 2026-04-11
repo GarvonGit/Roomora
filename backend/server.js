@@ -6,7 +6,6 @@ const jwt = require('jsonwebtoken');
 const Razorpay = require('razorpay');
 const nodemailer = require('nodemailer');
 const { Pool } = require('pg');
-const { generatePricingSuggestion } = require('./routes/pricing');
 
 // Load env vars
 dotenv.config();
@@ -492,7 +491,7 @@ app.get('/api/bookings', authenticateToken, async (req, res) => {
         // Format ota_source to capitalized structure if needed natively on frontend
         const formatted = bookRes.rows.map(b => ({
             ...b,
-            ota_source: b.ota_source === 'booking' ? 'Booking.com' : b.ota_source.charAt(0).toUpperCase() + b.ota_source.slice(1)
+            ota_source: b.ota_source === 'booking' ? 'Booking.com' : (b.ota_source ? b.ota_source.charAt(0).toUpperCase() + b.ota_source.slice(1) : 'Direct')
         }));
         res.json(formatted);
     } catch(err) {
@@ -543,9 +542,6 @@ app.get('/api/integrations', authenticateToken, async (req, res) => {
         res.status(500).json({ message: 'Error fetching integrations' });
     }
 });
-
-// --- Pricing AI Suggestion (Ollama) ---
-app.post('/api/pricing/suggest-ai', authenticateToken, generatePricingSuggestion);
 
 // --- Payment & Billing (Razorpay) ---
 app.post('/api/payments/create-order', authenticateToken, async (req, res) => {
