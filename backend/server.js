@@ -10,6 +10,59 @@ const { Pool } = require('pg');
 // Load env vars
 dotenv.config();
 
+// --- GLOBAL MOCK DATA (Top-Level to prevent ReferenceErrors) ---
+var dbRooms = [
+    { id: 1, type: 'Normal', total_count: 10, base_price: 1500 },
+    { id: 2, type: 'Executive', total_count: 7, base_price: 2000 }
+];
+
+var dateWiseInventory = {};
+
+function generateMockBookings() {
+  const bookings = [];
+  const today = new Date();
+  let idCounter = 1;
+  const specialDates = { "2026-04-14": 1.4, "2026-04-18": 1.5 };
+
+  for (let i = -30; i <= 30; i++) {
+    const currentDate = new Date(today);
+    currentDate.setDate(today.getDate() + i);
+    const dateStr = currentDate.toISOString().split("T")[0];
+
+    dbRooms.forEach(room => {
+      let occupancyRate = i < 0 ? Math.random() * 0.9 : [0.3, 0.5, 0.7, 0.9][Math.floor(Math.random() * 4)];
+      const roomsSold = Math.floor(room.total_count * occupancyRate);
+
+      for (let j = 0; j < roomsSold; j++) {
+        let priceMultiplier = 1;
+        if (occupancyRate > 0.8) priceMultiplier = 1.3;
+        else if (occupancyRate < 0.4) priceMultiplier = 0.85;
+        if (specialDates[dateStr]) priceMultiplier *= specialDates[dateStr];
+
+        const otas = ['booking', 'airbnb', 'agoda', 'makemytrip'];
+        const platform = otas[Math.floor(Math.random() * otas.length)];
+
+        bookings.push({
+          id: idCounter++,
+          hotel_id: 201, 
+          guest_name: 'Guest ' + idCounter,
+          room_type: room.type,
+          check_in: currentDate.toISOString(),
+          check_out: new Date(currentDate.getTime() + 86400000).toISOString(),
+          platform_name: platform,
+          price: Math.floor(room.base_price * priceMultiplier),
+          status: 'confirmed',
+          created_at: currentDate.toISOString()
+        });
+      }
+    });
+  }
+  return bookings;
+}
+
+var GLOBAL_MOCK_BOOKINGS = generateMockBookings();
+// -------------------------------------------------------------
+
 const app = express();
 
 // Middleware
@@ -29,107 +82,84 @@ const transporter = nodemailer.createTransport({
     auth: { user: "mock@ethereal.email", pass: "mock123" }
 });
 
-// In-Memory Live Inventory System (Mocking DB)
-const dbRooms = [
-    { id: 1, type: 'Normal', total_count: 10, base_price: 1500 },
-    { id: 2, type: 'Executive', total_count: 7, base_price: 2000 }
+
+
+
+
+// Mock Database Arrays
+let users = [
+    { 
+        id: 101, 
+        username: 'admin', 
+        email: 'admin@roomora.com', 
+        password_hash: bcrypt.hashSync('admin123', 10), 
+        plan_name: 'Pro', 
+        plan_expiry: '2030-12-31'
+    }
 ];
 
-let dateWiseInventory = {}; // Maps 'YYYY-MM-DD' => { roomId: availableCount }
-
-function generateMockBookings() {
-  const bookings = [];
-  const today = new Date();
-
-  const specialDates = {
-    [`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-14`]: 1.4,
-    [`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-18`]: 1.5,
-    "2026-04-14": 1.4,
-    "2026-04-18": 1.5
-  };
-
-  let idCounter = 1;
-
-  for (let i = -30; i <= 30; i++) {
-    const currentDate = new Date(today);
-    currentDate.setDate(today.getDate() + i);
-
-    const dateStr = currentDate.toISOString().split("T")[0];
-
-    dbRooms.forEach(room => {
-      let occupancyRate;
-
-      if (i < 0) {
-        occupancyRate = Math.random() * 0.9;
-      } else {
-        occupancyRate = [0.3, 0.5, 0.7, 0.9][Math.floor(Math.random() * 4)];
-      }
-
-      const roomsSold = Math.floor(room.total_count * occupancyRate);
-
-      for (let j = 0; j < roomsSold; j++) {
-        let priceMultiplier = 1;
-
-        if (occupancyRate > 0.8) priceMultiplier = 1.3;
-        else if (occupancyRate > 0.6) priceMultiplier = 1.15;
-        else if (occupancyRate < 0.4) priceMultiplier = 0.85;
-
-        if (specialDates[dateStr]) {
-          priceMultiplier *= specialDates[dateStr];
-        }
-
-        bookings.push({
-          id: idCounter++,
-          guest_name: 'Mocked Guest ' + j,
-          room_type: room.type,
-          check_in: currentDate,
-          check_out: new Date(currentDate.getTime() + (86400000 * 1)),
-          ota_source: 'MakeMyTrip',
-          platform_name: 'MakeMyTrip',
-          price: Math.floor(room.base_price * priceMultiplier),
-          status: 'confirmed',
-          created_at: currentDate
-        });
-      }
-    });
-  }
-
-  return bookings;
-}
-
-let GLOBAL_MOCK_BOOKINGS = generateMockBookings();
+let hotels = [
+    { id: 201, user_id: 101, hotel_name: 'The Grand Roomora (Demo)', base_currency: 'INR' }
+];
 
 // Configure a COMPLETE MOCK of PostgreSQL Pool to bypass paused Supabase ENOTFOUND errors
 const pool = {
   query: async (text, params) => {
-    const q = typeof text === 'string' ? text : text.text;
+    const q = typeof text === 'string' ? text.toLowerCase() : text.text.toLowerCase();
     
-    // Mock Auth / Check User
-    if (q.includes('FROM users WHERE id =') || q.includes('FROM users LIMIT 1') || q.includes('SELECT * FROM users WHERE username =')) {
-        return { rows: [{ id: 101, username: 'Test User', email: 'test@roomora.com', password_hash: '$2a$10$xyz', plan_name: 'Pro', plan_expiry: '2030-12-31T00:00:00.000Z' }] };
+    // Auth / User Checks
+    if (q.includes('from users where username =')) {
+        const u = users.find(u => u.username === params[0]);
+        return { rows: u ? [u] : [] };
+    }
+    if (q.includes('from users where email =')) {
+        const u = users.find(u => u.email === params[0]);
+        return { rows: u ? [u] : [] };
+    }
+    if (q.includes('from users where id =')) {
+        const u = users.find(u => u.id === params[0]);
+        return { rows: u ? [u] : [] };
+    }
+    if (q.includes('from users where username = $1 or email = $2')) {
+        const u = users.find(u => u.username === params[0] || u.email === params[1]);
+        return { rows: u ? [u] : [] };
+    }
+    if (q.includes('insert into users')) {
+        const newId = users.length + 101;
+        const newUser = { id: newId, username: params[0], email: params[1], password_hash: params[2], phone_number: params[3], plan_name: 'Free', plan_expiry: '2030-12-31' };
+        users.push(newUser);
+        return { rows: [newUser] };
+    }
+
+    // Hotel Match
+    if (q.includes('from hotels where user_id =')) {
+        const h = hotels.find(h => h.user_id === params[0]);
+        return { rows: h ? [h] : [] };
+    }
+    if (q.includes('insert into hotels')) {
+        const newId = hotels.length + 201;
+        const newHotel = { id: newId, user_id: params[0], hotel_name: params[1], base_currency: 'INR' };
+        hotels.push(newHotel);
+        return { rows: [newId] };
     }
     
-    // Mock Hotel Match
-    if (q.includes('FROM hotels WHERE user_id')) {
-        return { rows: [{ id: 201, hotel_name: 'The Grand Roomora (Demo)' }] };
-    }
-    
-    // Mock Dashboard Analytics: Overview
-    if (q.includes('FROM hotels')) {
-        return { rows: [{ id: 201, name: 'Grand Sunset Resort', base_currency: 'INR' }] };
+    // Dashboard Analytics: Overview
+    if (q.includes('from hotels')) {
+        const h = hotels.find(h => h.id === params[0]);
+        return { rows: [h || hotels[0]] };
     }
     
     // Mock Dashboard Analytics: Bookings
-    if (q.includes('FROM bookings')) {
+    if (q.includes('from bookings')) {
         return { rows: GLOBAL_MOCK_BOOKINGS };
     }
     
-    if (q.includes('count(*) FROM ota_integrations')) {
+    if (q.includes('count(*) from ota_integrations')) {
         return { rows: [{ count: '3' }] };
     }
     
     // Mock Integrations
-    if (q.includes('FROM ota_integrations')) {
+    if (q.includes('from ota_integrations')) {
         return { rows: [
             { id: 1, platform_name: 'booking', connected: true, apiKey: 'mock-key', secret: 'mock-secret' },
             { id: 2, platform_name: 'airbnb', connected: true, apiKey: 'mock-key', secret: 'mock-secret' }
@@ -137,7 +167,7 @@ const pool = {
     }
     
     // Mock Inventory (4 Room Types as requested)
-    if (q.includes('FROM rooms')) {
+    if (q.includes('from rooms')) {
         return { rows: dbRooms.map(r => ({ ...r, available: r.total_count })) };
     }
 
@@ -145,56 +175,35 @@ const pool = {
   },
   connect: async () => {
      return {
-         query: async () => ({ rows: [] }),
+         query: async (t, p) => pool.query(t, p),
          release: () => {}
      };
   }
 };
 
-// Authentication Middleware (Bypassed for Testing)
+// Production-Ready Authentication Middleware
 const authenticateToken = async (req, res, next) => {
-    try {
-        // Automatically inject the specific seeded demo user for testing (id 101, hotel 201)
-        const userRes = await pool.query('SELECT * FROM users WHERE id = 101');
-        if (userRes.rows.length > 0) {
-            req.user = userRes.rows[0];
-            req.user.hotel_id = 201;
-        } else {
-            const fallback = await pool.query('SELECT * FROM users LIMIT 1');
-            if (fallback.rows.length > 0) {
-                req.user = fallback.rows[0];
-                const hotelRes = await pool.query('SELECT id FROM hotels WHERE user_id = $1', [req.user.id]);
-                req.user.hotel_id = hotelRes.rows.length > 0 ? hotelRes.rows[0].id : null;
-            } else {
-                req.user = { id: 101, username: 'Test User', email: 'test@roomora.com', hotel_id: 201 };
-            }
-        }
-        return next();
-    } catch (e) {
-        console.error('Mock auth error:', e);
-        return next();
-    }
-
-    /* 
-    // ORIGINAL AUTH CODE: 
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
-    if (token == null) return res.sendStatus(401);
+    
+    if (token == null) return res.status(401).json({ message: 'Token required' });
 
     jwt.verify(token, JWT_SECRET, async (err, user) => {
-        if (err) return res.sendStatus(403);
-        req.user = user;
-
+        if (err) return res.status(403).json({ message: 'Session expired. Please login again.' });
+        
         try {
-            const hotelRes = await pool.query('SELECT id FROM hotels WHERE user_id = $1', [user.id]);
+            const userRes = await pool.query('SELECT * FROM users WHERE id = $1', [user.id]);
+            if (userRes.rows.length === 0) return res.status(404).json({ message: 'User not found' });
+            
+            req.user = userRes.rows[0];
+            const hotelRes = await pool.query('SELECT id FROM hotels WHERE user_id = $1', [req.user.id]);
             req.user.hotel_id = hotelRes.rows.length > 0 ? hotelRes.rows[0].id : null;
             next();
         } catch (e) {
-            console.error('Error in auth middleware', e);
-            res.sendStatus(500);
+            console.error('Auth middleware error:', e);
+            res.status(500).json({ message: 'Authentication error' });
         }
     });
-    */
 };
 
 // --- Auth ---
@@ -318,10 +327,10 @@ app.post('/api/inventory/webhook-sync', (req, res) => {
 });
 
 app.post('/api/auth/login', async (req, res) => {
-    const { username, password } = req.body;
+    const { email, password } = req.body;
 
     try {
-        const userRes = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
+        const userRes = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
         if (userRes.rows.length === 0) {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
@@ -383,7 +392,8 @@ app.get('/api/dashboard/analytics', authenticateToken, async (req, res) => {
             const grouped = {};
             let maxDay = new Date(month + '-01').getDate(); // minimal start
             userBookings.forEach(b => {
-                const day = b.created_at.getDate();
+                const bDate = new Date(b.created_at);
+                const day = bDate.getDate();
                 if (!grouped[day]) grouped[day] = 0;
                 grouped[day] += Number(b.price || 0);
                 if (day > maxDay) maxDay = day;
@@ -394,13 +404,16 @@ app.get('/api/dashboard/analytics', authenticateToken, async (req, res) => {
         } else {
             // Group by Month if no specific month filter is applied
             const grouped = {};
-            userBookings.forEach(b => {
-                const m = b.created_at.toLocaleString('default', { month: 'short' });
-                if (!grouped[m]) grouped[m] = 0;
-                grouped[m] += Number(b.price || 0);
-            });
-            // Ensure chronological sorting of months by checking real dates or just sending the map out
             const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            
+            userBookings.forEach(b => {
+                const bDate = new Date(b.created_at);
+                const mIndex = bDate.getMonth();
+                const mName = monthNames[mIndex];
+                if (!grouped[mName]) grouped[mName] = 0;
+                grouped[mName] += Number(b.price || 0);
+            });
+            
             trends = monthNames.filter(m => grouped[m] !== undefined).map(m => ({
                 name: m,
                 month: m,
@@ -420,10 +433,12 @@ app.get('/api/dashboard/analytics', authenticateToken, async (req, res) => {
                 activeChannels: parseInt(channelRes.rows[0].count)
             },
             revenueTrends: trends,
-            platformBookings: userBookings.length > 0 ? [
+            platformBookings: [
                 { name: 'Booking.com', value: userBookings.filter(b => b.platform_name === 'booking').length },
-                { name: 'Airbnb', value: userBookings.filter(b => b.platform_name === 'airbnb').length }
-            ] : []
+                { name: 'Airbnb', value: userBookings.filter(b => b.platform_name === 'airbnb').length },
+                { name: 'Agoda', value: userBookings.filter(b => b.platform_name === 'agoda').length },
+                { name: 'Direct/Offline', value: userBookings.filter(b => b.platform_name === 'makemytrip').length }
+            ]
         });
     } catch(err) {
         console.error('Analytics Fetch Error:', err);

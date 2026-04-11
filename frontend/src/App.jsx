@@ -13,9 +13,8 @@ import Signup from './pages/Signup';
 import LandingPage from './pages/LandingPage';
 
 const PrivateRoute = ({ children }) => {
-  // const token = localStorage.getItem('token');
-  // return token ? children : <Navigate to="/login" />;
-  return children; // Login bypassed for testing
+  const token = localStorage.getItem('token');
+  return token ? children : <Navigate to="/login" />;
 };
 
 export default function App() {

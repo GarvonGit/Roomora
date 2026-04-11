@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Sparkles, CalendarDays, RefreshCw, BarChart3, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Sparkles, CalendarDays, RefreshCw, BarChart3, ShieldCheck, TrendingUp } from 'lucide-react';
 
 export default function LandingPage({ darkMode, setDarkMode }) {
   // Animation variants
@@ -68,7 +68,7 @@ export default function LandingPage({ darkMode, setDarkMode }) {
           className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100/50 dark:bg-primary-900/30 border border-blue-200 dark:border-primary-800/50 text-blue-800 dark:text-primary-300 font-medium text-sm mb-8 backdrop-blur-sm"
         >
           <Sparkles className="w-4 h-4 text-orange-500 animate-pulse" />
-          Powered by Gemini 3.1 Flash Lite · Fast & Accurate
+          Roomora Revenue Intelligence · Autonomous & Deterministic Pricing
         </motion.div>
 
         <motion.h1
@@ -262,157 +262,190 @@ export default function LandingPage({ darkMode, setDarkMode }) {
       </main>
 
       {/* Features Section */}
-      <section className="relative z-10 bg-white dark:bg-slate-900 py-24 border-y border-gray-100 dark:border-slate-800 transition-colors duration-300 overflow-hidden">
+      <section className="relative z-10 bg-white dark:bg-slate-900 py-32 border-y border-gray-100 dark:border-slate-800 transition-colors duration-300 overflow-hidden">
         <div className="container mx-auto px-6">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
             viewport={{ once: true }}
-            className="text-center max-w-3xl mx-auto mb-16"
+            className="text-center max-w-3xl mx-auto mb-20"
           >
-            <h2 className="text-4xl md:text-5xl font-black tracking-tight text-gray-900 dark:text-white mb-6">
-              Everything you need to <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-500">dominate</span> your local market.
+            <h2 className="text-4xl md:text-6xl font-black tracking-tight text-gray-900 dark:text-white mb-6">
+              Everything you need to <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">dominate</span> your market.
             </h2>
             <p className="text-lg text-gray-600 dark:text-gray-400">
-              Roomora is built for Indian hoteliers — from boutique properties to mid-size hotels. Centralize bookings, eliminate overbooking, and grow revenue with smart automation.
+              Roomora isn't just a dashboard — it's your hotel's new brain. We've automated the heavy lifting so you can focus on your guests.
             </p>
           </motion.div>
 
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[auto] md:auto-rows-[minmax(250px,_auto)]"
-          >
-            {/* Box 1 (Large) - AI Pricing */}
-            <motion.div
-              variants={itemVariants}
-              whileHover={{ y: -8, scale: 1.01 }}
-              transition={{ type: "spring", stiffness: 300, damping: 20 }}
-              className="md:col-span-2 md:row-span-2 relative group overflow-hidden rounded-[2rem] bg-gradient-to-br from-blue-900 to-slate-900 border border-slate-800 p-8 md:p-12 flex flex-col justify-end min-h-[400px]"
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-6 auto-rows-[300px]">
+            
+            {/* 1. REVENUE INTELLIGENCE (Large) */}
+            <motion.div 
+              initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+              className="md:col-span-4 md:row-span-2 relative group overflow-hidden rounded-[2.5rem] bg-slate-950 p-10 flex flex-col justify-between border border-slate-800"
             >
-              {/* Decorative Glows */}
-              <motion.div animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.5, 0.3] }} transition={{ repeat: Infinity, duration: 4 }} className="absolute top-[-20%] right-[-10%] w-[80%] h-[80%] bg-blue-500/20 rounded-full blur-[100px]"></motion.div>
-              <motion.div animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.4, 0.2] }} transition={{ repeat: Infinity, duration: 5, delay: 1 }} className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-purple-500/20 rounded-full blur-[100px]"></motion.div>
-
-              <motion.div
-                animate={{ rotate: [0, 5, -5, 0] }}
-                transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
-                className="bg-white/10 backdrop-blur-md w-16 h-16 rounded-2xl flex items-center justify-center mb-6 shadow-xl border border-white/10 relative z-10"
-              >
-                <Sparkles className="w-8 h-8 text-blue-300" />
-              </motion.div>
-              <h3 className="text-3xl md:text-5xl font-black text-white mb-4 relative z-10 tracking-tight">AI-Powered Dynamic Pricing</h3>
-              <p className="text-blue-100/70 text-lg md:text-xl max-w-xl relative z-10 leading-relaxed font-medium">
-                Our built-in AI analyzes occupancy, upcoming occasions, historical data, and demand patterns to recommend optimal prices and multipliers automatically. Get profitable suggestions you can apply in one click.
-              </p>
-            </motion.div>
-
-            {/* Box 2 - OTA Sync */}
-            <motion.div
-              variants={itemVariants}
-              whileHover={{ y: -8 }}
-              className="md:col-span-1 md:row-span-1 relative group overflow-hidden rounded-[2rem] bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 p-8 flex flex-col hover:border-purple-300 dark:hover:border-purple-500/50 hover:shadow-2xl hover:shadow-purple-500/10 transition-colors duration-300"
-            >
-              <div className="bg-purple-100 dark:bg-purple-900/30 w-14 h-14 rounded-2xl flex items-center justify-center mb-6 text-purple-600 dark:text-purple-400 group-hover:rotate-12 transition-transform duration-300">
-                <RefreshCw className="w-7 h-7" />
-              </div>
-              <h3 className="text-2xl font-black tracking-tight text-gray-900 dark:text-white mb-3">Seamless OTA Sync</h3>
-              <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                Instant two-way updates with MakeMyTrip, Goibibo, Booking.com, Agoda, and more. Never double-book again. Push prices and inventory across all channels simultaneously.
-              </p>
-            </motion.div>
-
-            {/* Box 3 - Smart Calendar */}
-            <motion.div
-              variants={itemVariants}
-              whileHover={{ y: -8 }}
-              className="md:col-span-1 md:row-span-1 relative group overflow-hidden rounded-[2rem] bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 p-8 flex flex-col hover:border-orange-300 dark:hover:border-orange-500/50 hover:shadow-2xl hover:shadow-orange-500/10 transition-colors duration-300"
-            >
-              <div className="bg-orange-100 dark:bg-orange-900/30 w-14 h-14 rounded-2xl flex items-center justify-center mb-6 text-orange-600 dark:text-orange-400 group-hover:-rotate-12 transition-transform duration-300">
-                <CalendarDays className="w-7 h-7" />
-              </div>
-              <h3 className="text-2xl font-black tracking-tight text-gray-900 dark:text-white mb-3">Smart Visual Calendar</h3>
-              <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                See your entire month at a glance — automated pricing strategies, booking limits, occupancy forecasts, and holiday impacts.
-              </p>
-            </motion.div>
-
-            {/* Box 4 - Predictive Analytics */}
-            <motion.div
-              variants={itemVariants}
-              whileHover={{ scale: 1.02 }}
-              transition={{ type: "spring", stiffness: 300, damping: 20 }}
-              className="md:col-span-2 md:row-span-1 relative group overflow-hidden rounded-[2rem] bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 p-8 flex items-center hover:shadow-2xl hover:shadow-green-500/10 transition-colors duration-300 min-h-[250px]"
-            >
-              <div className="absolute right-0 bottom-0 opacity-5 dark:opacity-10 group-hover:opacity-[0.15] dark:group-hover:opacity-30 group-hover:-translate-y-4 group-hover:-translate-x-4 transition-all duration-700">
-                <BarChart3 className="w-64 h-64 text-green-500 translate-x-12 translate-y-16" />
-              </div>
-              <div className="relative z-10 max-w-lg">
-                <div className="bg-green-100 dark:bg-green-900/30 w-14 h-14 rounded-2xl flex items-center justify-center mb-6 text-green-600 dark:text-green-400 group-hover:scale-110 transition-transform duration-500">
-                  <BarChart3 className="w-7 h-7" />
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-transparent pointer-events-none" />
+              <div className="relative z-10 flex flex-col h-full">
+                <div className="flex justify-between items-start mb-auto">
+                    <div>
+                      <h3 className="text-3xl md:text-5xl font-black text-white mb-4 tracking-tighter">Autonomous Pricing</h3>
+                      <p className="text-slate-400 text-lg max-w-md">Our algorithm detects local events & occupancy spikes in milliseconds, suggesting the perfect shelf price every night.</p>
+                    </div>
                 </div>
-                <h3 className="text-2xl font-black tracking-tight text-gray-900 dark:text-white mb-3">Actionable Analytics</h3>
-                <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                  Track ADR, RevPAR, occupancy trends, and revenue KPIs with clear charts. Know exactly what's working and where to improve.
-                </p>
+
+                {/* VISUAL COMPONENT: PRICE OPTIMIZER MOCKUP */}
+                <div className="mt-8 relative h-48 bg-white/5 rounded-3xl border border-white/10 p-6 flex items-center justify-center overflow-hidden">
+                    <div className="absolute inset-0 bg-blue-500/5 blur-3xl" />
+                    <div className="flex gap-8 items-end relative z-10 w-full justify-around">
+                        {[
+                          { label: 'Standard', old: '₹1400', new: '₹1650', h: 60, p: '18%' },
+                          { label: 'Executive', old: '₹2200', new: '₹2800', h: 90, p: '27%' },
+                          { label: 'Suite', old: '₹4500', new: '₹5200', h: 75, p: '15%' }
+                        ].map((item, idx) => (
+                           <div key={idx} className="flex flex-col items-center">
+                              <motion.div 
+                                initial={{ height: 0 }}
+                                whileInView={{ height: `${item.h}%` }}
+                                transition={{ delay: idx * 0.2 + 0.5, duration: 1 }}
+                                className="w-16 bg-gradient-to-t from-blue-600 to-purple-500 rounded-t-xl relative group"
+                              >
+                                 <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-green-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">+{item.p}</div>
+                              </motion.div>
+                              <p className="text-xs text-slate-500 mt-3 font-semibold uppercase tracking-widest">{item.label}</p>
+                              <p className="text-[10px] text-slate-600 line-through">{item.old}</p>
+                              <p className="text-sm text-white font-bold">{item.new}</p>
+                           </div>
+                        ))}
+                    </div>
+                </div>
               </div>
             </motion.div>
 
-            {/* Box 5 - Secure / Try Now */}
-            <motion.div
-              variants={itemVariants}
-              whileHover={{ y: -10 }}
-              className="md:col-span-1 md:row-span-1 relative group overflow-hidden rounded-[2rem] bg-gradient-to-br from-indigo-500 to-purple-600 border border-purple-400 shadow-xl p-8 flex flex-col justify-center items-center text-center hover:shadow-purple-500/40 transition-colors duration-500"
+            {/* 2. OTA SYNC (Narrow) */}
+            <motion.div 
+              initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}
+              className="md:col-span-2 md:row-span-1 relative group overflow-hidden rounded-[2.5rem] bg-indigo-50 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/30 p-8"
             >
-              <motion.div animate={{ y: [0, -5, 0] }} transition={{ repeat: Infinity, duration: 3 }}>
-                <ShieldCheck className="w-12 h-12 mb-4 text-white opacity-90" />
-              </motion.div>
-              <h3 className="text-2xl font-black tracking-tight text-white mb-2">Enterprise-Grade Security</h3>
-              <p className="text-indigo-100 leading-relaxed mb-8 flex-grow text-sm">
-                Multi-tenant isolation, audit logs, and secure data handling so your hotel information stays private and protected.
-              </p>
-              <Link to="/signup" className="px-8 py-4 bg-white text-indigo-900 font-bold rounded-full hover:scale-105 transition-transform w-full shadow-lg shadow-black/10">
-                Start Free Trial
-              </Link>
+               <h4 className="text-xl font-bold mb-2">Real-time Hub</h4>
+               <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">Master inventory synced to BDC, MMT, Agoda & Airbnb instantly.</p>
+               
+               {/* VISUAL: PULSING HUB */}
+               <div className="flex justify-center items-center py-4 relative">
+                  <motion.div 
+                    animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.2, 0.5] }}
+                    transition={{ repeat: Infinity, duration: 3 }}
+                    className="absolute w-16 h-16 rounded-full bg-blue-500/20"
+                  />
+                  <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white z-10 shadow-lg">
+                    <RefreshCw className="w-6 h-6 animate-spin-slow" />
+                  </div>
+                  {/* Floating OTA icons */}
+                  {[0, 90, 180, 270].map((deg, i) => (
+                    <motion.div 
+                      key={i}
+                      initial={{ scale: 0 }}
+                      whileInView={{ scale: 1, x: Math.cos(deg * Math.PI / 180) * 50, y: Math.sin(deg * Math.PI / 180) * 50 }}
+                      transition={{ delay: 1 + (i * 0.1) }}
+                      className="absolute w-8 h-8 rounded-lg bg-white dark:bg-slate-800 shadow-md border border-gray-100 dark:border-slate-700 flex items-center justify-center text-[8px] font-black"
+                    >
+                      {['BDC', 'MMT', 'AGO', 'AIR'][i]}
+                    </motion.div>
+                  ))}
+               </div>
             </motion.div>
-          </motion.div>
+
+            {/* 3. CALENDAR HEATMAP (Small) */}
+            <motion.div 
+              initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+              className="md:col-span-2 md:row-span-1 relative group overflow-hidden rounded-[2.5rem] bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 p-8"
+            >
+               <h4 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">Smart Forecast</h4>
+               <p className="text-sm text-gray-500 mb-6">See demand spikes before they happen.</p>
+               
+               {/* VISUAL: MINI HEATMAP */}
+               <div className="grid grid-cols-5 gap-1.5 opacity-80">
+                  {[...Array(15)].map((_, i) => (
+                    <div 
+                      key={i} 
+                      className={`h-8 rounded-md ${i === 7 || i === 8 || i === 12 ? 'bg-orange-500 scale-110 shadow-lg shadow-orange-500/30' : 'bg-blue-100 dark:bg-slate-800'}`}
+                    />
+                  ))}
+               </div>
+               <div className="mt-3 flex justify-between text-[10px] font-bold text-orange-500 animate-pulse uppercase">
+                  <span>Standard</span>
+                  <span>⚠ High Demand Day</span>
+               </div>
+            </motion.div>
+
+            {/* 4. SMART ANALYTICS (Bottom Wide) */}
+            <motion.div 
+               initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+               className="md:col-span-6 md:row-span-1 relative group overflow-hidden rounded-[2.5rem] bg-gradient-to-r from-emerald-500/5 to-transparent border border-gray-200 dark:border-slate-800 p-8 flex items-center justify-between"
+            >
+               <div className="max-w-md">
+                 <h4 className="text-2xl font-black mb-3">Predictive Analytics</h4>
+                 <p className="text-gray-600 dark:text-gray-400">Track ADR, RevPAR, and occupancy trends with clear, actionable charts that tell you exactly what's working.</p>
+               </div>
+               
+               {/* VISUAL: COMPACT CHART */}
+               <div className="hidden lg:flex gap-2 items-end h-32 pr-20">
+                  {[40, 60, 45, 90, 65, 80, 100].map((h, i) => (
+                    <motion.div 
+                      key={i}
+                      initial={{ height: 0 }}
+                      whileInView={{ height: `${h}%` }}
+                      transition={{ delay: 0.5 + (i * 0.1) }}
+                      className={`w-4 rounded-full ${i === 6 ? 'bg-emerald-500 shadow-xl shadow-emerald-500/30' : 'bg-slate-200 dark:bg-slate-800'}`}
+                    />
+                  ))}
+                  <div className="ml-4 text-emerald-500">
+                     <TrendingUp className="w-8 h-8" />
+                     <p className="text-xs font-black">+24%</p>
+                  </div>
+               </div>
+            </motion.div>
+
+          </div>
         </div>
       </section>
 
       {/* Contact & Demo CTA Section */}
-      <section className="relative z-10 bg-slate-50 dark:bg-slate-950 py-24 border-t border-gray-100 dark:border-slate-800 transition-colors duration-300">
-        <div className="container mx-auto px-6 max-w-4xl text-center">
+      <section className="relative z-10 bg-slate-50 dark:bg-slate-950 py-32 border-t border-gray-100 dark:border-slate-800 transition-colors duration-300">
+        <div className="container mx-auto px-6 max-w-5xl">
           <motion.div
             initial={{ y: 20, opacity: 0 }}
             whileInView={{ y: 0, opacity: 1 }}
             viewport={{ once: true }}
-            className="p-10 md:p-14 rounded-3xl bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 shadow-xl"
+            className="relative p-10 md:p-20 rounded-[3rem] bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 shadow-2xl overflow-hidden text-center"
           >
-            <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-gray-900 dark:text-white mb-6">
-              Ready to increase your occupancy and ADR?
+            {/* Background design */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+
+            <h2 className="text-4xl md:text-6xl font-black tracking-tight text-gray-900 dark:text-white mb-8 relative z-10">
+              Ready to grow your RevPAR?
             </h2>
-            <p className="text-lg text-gray-600 dark:text-gray-400 mb-10 max-w-2xl mx-auto">
-              Join hundreds of smart hotel owners who are using Roomora to run more profitable properties with less daily effort.
+            <p className="text-xl text-gray-600 dark:text-gray-400 mb-12 max-w-2xl mx-auto relative z-10 leading-relaxed">
+              Join the new generation of revenue-focused hoteliers. Start your 30-day journey to better occupancy today.
             </p>
-            <div className="flex flex-col sm:flex-row justify-center gap-4">
+            <div className="flex flex-col sm:flex-row justify-center gap-6 relative z-10">
               <a
                 href="mailto:business.gaarv@gmail.com?subject=Roomora%20Demo%20Request"
-                className="px-8 py-4 rounded-full text-base font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/30 transition-transform active:scale-95 flex items-center justify-center gap-2"
+                className="px-10 py-5 rounded-full text-lg font-black bg-blue-600 hover:bg-blue-700 text-white shadow-xl shadow-blue-500/30 transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-3"
               >
-                Request a Live Demo
+                Request 1-on-1 Demo <Sparkles className="w-5 h-5" />
               </a>
-              <a
-                href="mailto:business.gaarv@gmail.com?subject=Roomora%20Sales%20Enquiry"
-                className="px-8 py-4 rounded-full text-base font-bold bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-900 dark:text-white shadow-sm hover:bg-gray-100 dark:hover:bg-slate-700 transition-transform active:scale-95 flex items-center justify-center gap-2"
+              <Link
+                to="/signup"
+                className="px-10 py-5 rounded-full text-lg font-black bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-900 dark:text-white shadow-xl hover:bg-gray-50 dark:hover:bg-slate-700 transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
               >
-                Contact Sales
-              </a>
+                Start Free Trial
+              </Link>
             </div>
-            <p className="mt-8 text-sm text-gray-500 dark:text-gray-400">
-              Or email us directly at <a href="mailto:business.gaarv@gmail.com" className="text-blue-600 dark:text-blue-400 hover:underline">business.gaarv@gmail.com</a>
+            <p className="mt-10 text-sm font-medium text-gray-500 dark:text-gray-400 relative z-10">
+              No credit card required · Instant setup · Multi-tenant secure
             </p>
           </motion.div>
         </div>
