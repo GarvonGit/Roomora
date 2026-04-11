@@ -131,7 +131,9 @@ export default function Inventory() {
     const soldCount = room.total_count - newAvailable;
     
     try {
-      await api.post('/inventory/update', { id: room.id, sold_count: soldCount, date: selectedDate });
+      const res = await api.post('/inventory/update', { id: room.id, sold_count: soldCount, date: selectedDate });
+      // Minor success toast-like status update could be added here if needed, but for now just log it
+      console.log(res.data.message);
     } catch(err) {
       console.error('Failed to quick update inventory:', err);
       fetchInventory(); // Revert on failure

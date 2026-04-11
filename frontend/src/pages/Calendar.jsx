@@ -28,6 +28,7 @@ export default function Calendar() {
   const [pastData, setPastData] = useState({});
   const [aiForecast, setAiForecast] = useState({});
   const [isForecasting, setIsForecasting] = useState(false);
+  const [rooms, setRooms] = useState([]);
   
   // Selected day breakdown state
   const [selectedDay, setSelectedDay] = useState(null);
@@ -67,6 +68,16 @@ export default function Calendar() {
       }
     };
     fetchMonthData();
+
+    const fetchInventory = async () => {
+      try {
+        const res = await api.get('/inventory');
+        setRooms(res.data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchInventory();
   }, [year, month]);
 
   const handlePrevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
@@ -120,7 +131,7 @@ export default function Calendar() {
          }
       }
 
-      // Call AI endpoint
+      // Call pricing algorithm endpoint
       const aiRes = await api.post('/pricing/ai-forecast', { dataPayload });
       
       const newForecast = { ...aiForecast };
@@ -132,8 +143,9 @@ export default function Calendar() {
       setAiForecast(newForecast);
       
     } catch(err) {
-      console.error("AI Error:", err);
-      alert('Network error connecting to pricing engine.');
+      console.error("Algorithm Error:", err);
+      const exactMsg = err.response?.data?.error || err.message;
+      alert(`Pricing algorithm error: ${exactMsg}`);
     } finally {
       setIsForecasting(false);
     }
@@ -435,37 +447,39 @@ export default function Calendar() {
                    <div className="space-y-6">
                       {aiForecast[selectedDay.dateStr] ? (
                           <>
-                              <div className="bg-purple-50 dark:bg-purple-900/10 border border-purple-100 dark:border-purple-900/30 rounded-lg p-4 flex gap-3 mb-6">
-                                <Sparkles className="w-5 h-5 text-purple-500 shrink-0 mt-0.5" />
-                                <div>
-                                  <h4 className="font-semibold text-sm text-purple-900 dark:text-purple-100 mb-1">AI Daily Strategy</h4>
-                                  <p className="text-sm text-purple-800/80 dark:text-purple-200/80">
-                                      {aiForecast[selectedDay.dateStr].overallStrategy}
-                                  </p>
-                                </div>
-                              </div>
-                              
                               <div className="overflow-x-auto">
                               <table className="w-full text-left text-sm whitespace-nowrap">
                                   <thead className="text-xs text-gray-500 uppercase bg-gray-50 dark:bg-dark-800">
                                     <tr>
                                       <th className="px-4 py-3 rounded-l-lg">Room Type</th>
-                                      <th className="px-4 py-3">Suggested Adjust</th>
-                                      <th className="px-4 py-3 rounded-r-lg">AI Reasoning</th>
+                                      <th className="px-4 py-3">Base Price</th>
+                                      <th className="px-4 py-3">Increase</th>
+                                      <th className="px-4 py-3">Final Price</th>
+                                      <th className="px-4 py-3 rounded-r-lg">Reasoning</th>
                                     </tr>
                                   </thead>
                                   <tbody>
-                                    {aiForecast[selectedDay.dateStr].recommendations.map((r, i) => (
-                                      <tr key={i} className="border-b border-gray-50 dark:border-dark-700/50 hover:bg-gray-50/50 dark:hover:bg-dark-800/20">
-                                        <td className="px-4 py-3 font-medium">{r.roomType}</td>
-                                        <td className={`px-4 py-3 font-bold ${r.priceChangePercent > 0 ? 'text-green-600' : r.priceChangePercent < 0 ? 'text-red-500' : 'text-gray-500'}`}>
-                                           {r.priceChangePercent > 0 ? '+' : ''}{r.priceChangePercent}%
-                                        </td>
-                                        <td className="px-4 py-3 text-xs text-gray-600 dark:text-gray-400 whitespace-normal">
+                                    {aiForecast[selectedDay.dateStr].recommendations.map((r, i) => {
+                                      const roomRef = rooms.find(rm => rm.type === r.roomType);
+                                      const basePrice = roomRef ? roomRef.base_price : 0;
+                                      const incAmt = Math.floor((basePrice * r.priceChangePercent) / 100);
+                                      const finalP = basePrice + incAmt;
+                                      return (
+                                        <tr key={i} className="border-b border-gray-50 dark:border-dark-700/50 hover:bg-gray-50/50 dark:hover:bg-dark-800/20">
+                                          <td className="px-4 py-3 font-medium">{r.roomType}</td>
+                                          <td className="px-4 py-3 text-gray-400">₹{basePrice.toLocaleString()}</td>
+                                          <td className={`px-4 py-3 font-bold ${r.priceChangePercent > 0 ? 'text-green-600' : r.priceChangePercent < 0 ? 'text-red-500' : 'text-gray-500'}`}>
+                                            {r.priceChangePercent > 0 ? '+' : ''}₹{incAmt.toLocaleString()} ({r.priceChangePercent}%)
+                                          </td>
+                                          <td className="px-4 py-3 font-bold text-gray-900 dark:text-white">
+                                            ₹{finalP.toLocaleString()}
+                                          </td>
+                                          <td className="px-4 py-3 text-xs text-gray-600 dark:text-gray-400 whitespace-normal">
                                             {r.reason}
-                                        </td>
-                                      </tr>
-                                    ))}
+                                          </td>
+                                        </tr>
+                                      );
+                                    })}
                                   </tbody>
                                 </table>
                                 </div>
